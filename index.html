@@ -1,0 +1,4366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fortune's Weave — Menu héros</title>
+  <style>
+    :root{
+      --bg:#050505;
+      --panel:#0d0d0f;
+      --panel-hover:#151519;
+      --panel-2:#111114;
+      --panel-3:#17171c;
+      --border:#34343a;
+      --border-light:#55555f;
+      --text:#f5f5f7;
+      --muted:#a7a7b0;
+    }
+
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      min-height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+      padding:54px 28px;
+    }
+
+    .page{
+      width:min(1280px,100%);
+      margin:0 auto;
+    }
+
+    /* =========================
+       MENU DES 4 HÉROS
+       ========================= */
+    .hero-bar{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:var(--panel);
+      overflow:visible;
+      position:relative;
+      z-index:20;
+    }
+
+    .hero{
+      position:relative;
+      min-width:0;
+      border-right:1px solid var(--border);
+    }
+
+    .hero:last-child{
+      border-right:none;
+    }
+
+    .hero-name{
+      height:64px;
+      display:flex;
+      align-items:center;
+      padding:0 20px;
+      font-size:17px;
+      font-weight:700;
+      letter-spacing:.01em;
+      cursor:default;
+      user-select:none;
+      transition:background .15s ease;
+    }
+
+    .hero:hover .hero-name,
+    .hero:focus-within .hero-name{
+      background:var(--panel-hover);
+    }
+
+    .hero-menu{
+      position:absolute;
+      top:100%;
+      left:-1px;
+      width:calc(100% + 2px);
+      border:1px solid var(--border);
+      border-top:none;
+      border-radius:0 0 10px 10px;
+      background:var(--panel);
+      overflow:hidden;
+
+      opacity:0;
+      visibility:hidden;
+      transform:translateY(-5px);
+      pointer-events:none;
+
+      transition:
+        opacity .16s ease,
+        transform .16s ease,
+        visibility .16s ease;
+    }
+
+    .hero:hover .hero-menu,
+    .hero:focus-within .hero-menu{
+      opacity:1;
+      visibility:visible;
+      transform:translateY(0);
+      pointer-events:auto;
+    }
+
+    .menu-item{
+      display:flex;
+      align-items:center;
+      min-height:58px;
+      padding:0 20px;
+      color:var(--text);
+      text-decoration:none;
+      border-top:1px solid var(--border);
+      font-size:15px;
+      background:var(--panel);
+      transition:background .15s ease, padding-left .15s ease;
+      cursor:pointer;
+    }
+
+    .menu-item:first-child{ border-top:none; }
+
+    .menu-item:hover,
+    .menu-item:focus{
+      background:var(--panel-hover);
+      padding-left:25px;
+      outline:none;
+    }
+
+    /* =========================
+       CONTENU PRINCIPAL
+       ========================= */
+    .content{
+      margin-top:28px;
+      min-height:560px;
+    }
+
+    .welcome{
+      min-height:560px;
+      border:1px solid rgba(255,255,255,.05);
+      border-radius:24px;
+      display:grid;
+      place-items:center;
+      padding:36px;
+      text-align:center;
+      color:var(--muted);
+      background:rgba(255,255,255,.01);
+    }
+
+    .welcome strong{
+      display:block;
+      color:var(--text);
+      font-size:22px;
+      margin-bottom:10px;
+    }
+
+    /* =========================
+       INVENTAIRE
+       ========================= */
+    .inventory-view{
+      display:none;
+    }
+
+    .inventory-view.active{
+      display:block;
+    }
+
+    .inventory-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    .inventory-title{
+      margin:0;
+      font-size:26px;
+    }
+
+    .inventory-head-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .inventory-subtitle{
+      margin:5px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .inventory-layout{
+      display:grid;
+      grid-template-columns:minmax(0,1.7fr) minmax(320px,.95fr);
+      border:1px solid var(--border);
+      border-radius:38px;
+      overflow:hidden;
+      background:linear-gradient(180deg,#0d0d10,#09090c);
+      min-height:620px;
+    }
+
+    .inventory-panel{
+      padding:26px;
+      min-width:0;
+    }
+
+    .inventory-panel + .inventory-panel{
+      border-left:1px solid var(--border);
+    }
+
+    .inventory-panel h2{
+      margin:0 0 8px;
+      font-size:21px;
+    }
+
+    .panel-note{
+      margin:0 0 18px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .stats{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+
+    .chip{
+      padding:8px 11px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#121217;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .search,
+    .text-input{
+      width:100%;
+      padding:12px 14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#111116;
+      color:var(--text);
+      outline:none;
+      font-size:14px;
+    }
+
+    .search:focus,
+    .text-input:focus{
+      border-color:var(--border-light);
+    }
+
+    .inventory-toolbar,
+    .catalog-toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+
+    .inventory-toolbar > *,
+    .catalog-toolbar > *{
+      flex:1 1 220px;
+    }
+
+    .add-item-form{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:10px;
+      margin-bottom:16px;
+    }
+
+    button{
+      font:inherit;
+    }
+
+    .btn{
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:var(--panel-2);
+      color:var(--text);
+      padding:11px 14px;
+      cursor:pointer;
+      transition:background .15s ease, border-color .15s ease;
+    }
+
+    .btn:hover{
+      background:var(--panel-3);
+      border-color:var(--border-light);
+    }
+
+    .inventory-list,
+    .catalog-list{
+      display:grid;
+      gap:10px;
+      align-content:start;
+    }
+
+    .empty{
+      padding:22px;
+      border:1px dashed var(--border);
+      border-radius:18px;
+      color:var(--muted);
+      text-align:center;
+      background:rgba(255,255,255,.02);
+      line-height:1.5;
+    }
+
+    .inventory-card{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:12px;
+      align-items:center;
+      padding:14px 16px;
+      border:1px solid var(--border);
+      border-radius:15px;
+      background:var(--panel-2);
+    }
+
+    .inventory-name{
+      font-size:15px;
+      font-weight:700;
+    }
+
+    .inventory-meta{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .inventory-actions{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:7px;
+      flex-wrap:wrap;
+    }
+
+    .qty{
+      min-width:42px;
+      text-align:center;
+      padding:7px 9px;
+      border:1px solid var(--border-light);
+      border-radius:999px;
+      background:#191920;
+      font-weight:700;
+      font-size:13px;
+    }
+
+    .small-btn{
+      border:1px solid var(--border);
+      border-radius:9px;
+      background:#141418;
+      color:var(--text);
+      padding:7px 9px;
+      cursor:pointer;
+    }
+
+    .small-btn:hover{
+      background:#1d1d23;
+    }
+
+    .catalog-item{
+      width:100%;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      align-items:stretch;
+      gap:10px;
+      padding:12px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:var(--panel-2);
+      color:var(--text);
+    }
+
+    .catalog-item:hover{
+      background:var(--panel-3);
+      border-color:var(--border-light);
+    }
+
+    .catalog-main{
+      min-width:0;
+      border:none;
+      background:transparent;
+      color:inherit;
+      text-align:left;
+      padding:2px;
+      cursor:pointer;
+    }
+
+    .catalog-item-name{
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .catalog-effect,
+    .inventory-effect{
+      display:block;
+      margin-top:6px;
+      color:#d4d4dc;
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .catalog-item-hint{
+      display:block;
+      margin-top:6px;
+      color:var(--muted);
+      font-size:11px;
+    }
+
+    .effect-status{
+      display:inline-block;
+      margin-top:7px;
+      padding:4px 8px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      color:var(--muted);
+      font-size:10px;
+      background:#101015;
+    }
+
+    .catalog-side{
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
+      justify-content:center;
+      gap:7px;
+      min-width:112px;
+    }
+
+    .plus{
+      width:36px;
+      height:36px;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      border:1px solid var(--border-light);
+      border-radius:999px;
+      padding:0;
+      font-weight:800;
+      align-self:center;
+      background:#141418;
+      color:var(--text);
+      cursor:pointer;
+      transition:background .15s ease,border-color .15s ease,transform .15s ease;
+    }
+
+    .plus:hover{
+      background:#22222a;
+      border-color:#777783;
+    }
+
+    .plus:active{ transform:scale(.96); }
+
+    .edit-effect-btn{
+      border:1px solid var(--border);
+      border-radius:9px;
+      background:#141418;
+      color:var(--text);
+      padding:7px 9px;
+      cursor:pointer;
+      font-size:11px;
+      white-space:nowrap;
+    }
+
+    .edit-effect-btn:hover{
+      background:#1d1d23;
+      border-color:var(--border-light);
+    }
+
+    /* Petit module de modification d'effet */
+    .effect-modal{
+      position:fixed;
+      inset:0;
+      z-index:1000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(0,0,0,.72);
+      backdrop-filter:blur(3px);
+    }
+
+    .effect-modal.open{ display:flex; }
+
+    .effect-modal-card{
+      width:min(560px,100%);
+      border:1px solid var(--border-light);
+      border-radius:18px;
+      background:#0f0f13;
+      box-shadow:0 24px 70px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+
+    .effect-modal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:18px 20px;
+      border-bottom:1px solid var(--border);
+    }
+
+    .effect-modal-head h3{
+      margin:0;
+      font-size:18px;
+    }
+
+    .effect-modal-close{
+      width:34px;
+      height:34px;
+      border:1px solid var(--border);
+      border-radius:9px;
+      background:#15151a;
+      color:var(--text);
+      cursor:pointer;
+      font-size:20px;
+      line-height:1;
+    }
+
+    .effect-modal-body{ padding:20px; }
+
+    .effect-modal-label{
+      display:block;
+      margin-bottom:8px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .effect-modal-textarea{
+      width:100%;
+      min-height:150px;
+      resize:vertical;
+      padding:13px 14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#09090c;
+      color:var(--text);
+      font:inherit;
+      line-height:1.5;
+      outline:none;
+    }
+
+    .effect-modal-textarea:focus{ border-color:var(--border-light); }
+
+    .effect-modal-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:16px;
+    }
+
+
+
+    .item-title-line{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .category-badge{
+      display:inline-block;
+      padding:4px 8px;
+      border:1px solid #3d3d46;
+      border-radius:999px;
+      background:#17171d;
+      color:#cfcfd7;
+      font-size:10px;
+      line-height:1.2;
+    }
+
+    .item-badges{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin-top:7px;
+    }
+
+    .name-status{
+      display:inline-block;
+      padding:4px 8px;
+      border:1px solid #35513d;
+      border-radius:999px;
+      background:#101a13;
+      color:#b9d5bf;
+      font-size:10px;
+      line-height:1.2;
+    }
+
+    .name-status.warning{
+      border-color:#665528;
+      background:#1d190e;
+      color:#e0c977;
+    }
+
+    .item-info-grid{
+      display:grid;
+      gap:5px;
+      margin-top:10px;
+      padding:10px;
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:10px;
+      background:rgba(255,255,255,.018);
+    }
+
+    .item-info-row{
+      display:grid;
+      grid-template-columns:minmax(105px,.85fr) minmax(0,1.55fr);
+      gap:10px;
+      align-items:start;
+      font-size:11px;
+      line-height:1.4;
+    }
+
+    .item-info-label{ color:var(--muted); }
+    .item-info-value{ color:#dedee5; overflow-wrap:anywhere; }
+
+    .catalog-list{
+      max-height:720px;
+      overflow:auto;
+      padding-right:4px;
+      scrollbar-width:thin;
+      scrollbar-color:#3c3c46 transparent;
+    }
+
+
+    /* =========================
+       ANNEXES / PARALOGUES
+       ========================= */
+    .paralogue-view{ display:none; }
+    .paralogue-view.active{ display:block; }
+
+    .paralogue-head{
+      display:flex;
+      justify-content:space-between;
+      gap:18px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .paralogue-title{ margin:0; font-size:26px; }
+    .paralogue-subtitle{
+      margin:6px 0 0;
+      max-width:900px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.55;
+    }
+
+    .paralogue-summary{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:18px;
+    }
+
+    .paralogue-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .paralogue-card{
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:linear-gradient(180deg,#101014,#0c0c0f);
+      padding:18px;
+    }
+
+    .paralogue-card-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .paralogue-owner{
+      font-size:17px;
+      font-weight:800;
+      line-height:1.25;
+    }
+
+    .paralogue-name{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    .paralogue-chapter{
+      flex:0 0 auto;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:6px 9px;
+      background:#141419;
+      color:#d7d7df;
+      font-size:11px;
+      white-space:nowrap;
+    }
+
+    .paralogue-dates{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:9px;
+      margin-bottom:12px;
+    }
+
+    .date-box{
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:10px 11px;
+      background:rgba(255,255,255,.018);
+    }
+
+    .date-label{
+      display:block;
+      color:var(--muted);
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+      margin-bottom:4px;
+    }
+
+    .date-value{
+      display:block;
+      color:var(--text);
+      font-size:13px;
+      font-weight:700;
+      line-height:1.4;
+    }
+
+    .paralogue-row{
+      display:grid;
+      grid-template-columns:100px minmax(0,1fr);
+      gap:10px;
+      font-size:12px;
+      line-height:1.45;
+      padding-top:9px;
+      margin-top:9px;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+
+    .paralogue-row-label{ color:var(--muted); }
+    .paralogue-row-value{ color:#dedee5; }
+
+    .paralogue-warning{
+      margin-top:12px;
+      padding:10px 11px;
+      border:1px solid #665528;
+      border-radius:12px;
+      background:#1d190e;
+      color:#e0c977;
+      font-size:11px;
+      line-height:1.45;
+    }
+
+    .paralogue-source-note{
+      margin-top:18px;
+      padding:14px 16px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      color:var(--muted);
+      background:#0e0e12;
+      font-size:12px;
+      line-height:1.55;
+    }
+
+    @media (max-width:980px){
+      .paralogue-grid{ grid-template-columns:1fr; }
+      .inventory-layout{
+        grid-template-columns:1fr;
+        border-radius:26px;
+      }
+
+      .inventory-panel + .inventory-panel{
+        border-left:none;
+        border-top:1px solid var(--border);
+      }
+    }
+
+    @media (max-width:760px){
+      body{ padding:30px 14px; }
+
+      .hero-bar{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .hero:nth-child(2){
+        border-right:none;
+      }
+
+      .hero:nth-child(-n+2){
+        border-bottom:1px solid var(--border);
+      }
+
+      .inventory-card{
+        grid-template-columns:1fr;
+      }
+
+      .inventory-actions{
+        justify-content:flex-start;
+      }
+    }
+
+    @media (max-width:460px){
+      .hero-bar{
+        grid-template-columns:1fr;
+      }
+
+      .hero{
+        border-right:none;
+        border-bottom:1px solid var(--border);
+      }
+
+      .hero:last-child{
+        border-bottom:none;
+      }
+
+      .hero-menu{
+        position:relative;
+        top:auto;
+        left:auto;
+        width:100%;
+        border-left:none;
+        border-right:none;
+        border-bottom:none;
+        border-radius:0;
+      }
+
+      .add-item-form{
+        grid-template-columns:1fr;
+      }
+
+      .inventory-panel{
+        padding:19px 15px;
+      }
+    }
+
+
+    /* =========================
+       VUE PERSONNAGE
+       ========================= */
+    .character-link{
+      color:var(--text);
+      text-decoration:none;
+      cursor:pointer;
+    }
+
+    /* Menu complet des personnages jouables */
+    .character-nav{
+      position:relative;
+    }
+
+    .character-roster-menu{
+      position:absolute;
+      top:100%;
+      right:-1px;
+      width:min(980px,calc(100vw - 56px));
+      max-height:min(72vh,720px);
+      overflow:auto;
+      padding:16px;
+      border:1px solid var(--border);
+      border-top:none;
+      border-radius:0 0 16px 16px;
+      background:#0c0c0f;
+      box-shadow:0 18px 45px rgba(0,0,0,.48);
+      opacity:0;
+      visibility:hidden;
+      transform:translateY(-5px);
+      pointer-events:none;
+      transition:opacity .16s ease,transform .16s ease,visibility .16s ease;
+      z-index:60;
+    }
+
+    .character-nav:hover .character-roster-menu,
+    .character-nav:focus-within .character-roster-menu{
+      opacity:1;
+      visibility:visible;
+      transform:translateY(0);
+      pointer-events:auto;
+    }
+
+    .character-roster-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      padding:2px 2px 14px;
+      margin-bottom:14px;
+      border-bottom:1px solid var(--border);
+    }
+
+    .character-roster-head strong{
+      display:block;
+      font-size:15px;
+      margin-bottom:4px;
+    }
+
+    .character-roster-head span{
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.45;
+    }
+
+    .character-roster-count{
+      flex:none;
+      padding:7px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#15151a;
+      color:var(--muted);
+      font-size:11px;
+      white-space:nowrap;
+    }
+
+    .character-roster-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .character-roster-group{
+      min-width:0;
+      border:1px solid var(--border);
+      border-radius:13px;
+      background:#101014;
+      padding:10px;
+    }
+
+    .character-roster-title{
+      margin:0 0 8px;
+      padding:0 4px 7px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      color:#d9d9df;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+
+    .character-roster-items{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:5px;
+    }
+
+    .character-roster-item{
+      display:block;
+      min-width:0;
+      padding:7px 8px;
+      border:1px solid transparent;
+      border-radius:8px;
+      color:var(--text);
+      text-decoration:none;
+      font-size:12px;
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      transition:background .13s ease,border-color .13s ease;
+    }
+
+    .character-roster-item:hover,
+    .character-roster-item:focus{
+      background:#1a1a20;
+      border-color:var(--border);
+      outline:none;
+    }
+
+    .character-roster-foot{
+      margin-top:13px;
+      padding-top:11px;
+      border-top:1px solid var(--border);
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.45;
+    }
+
+    @media (max-width:900px){
+      .character-roster-menu{
+        width:min(760px,calc(100vw - 28px));
+      }
+      .character-roster-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+
+    @media (max-width:600px){
+      .character-roster-menu{
+        position:fixed;
+        top:18px;
+        left:14px;
+        right:14px;
+        width:auto;
+        max-height:calc(100vh - 36px);
+        border-top:1px solid var(--border);
+        border-radius:16px;
+      }
+      .character-roster-grid{
+        grid-template-columns:1fr;
+      }
+      .character-roster-items{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+
+    .character-view{display:none;}
+    .character-view.active{display:block;}
+
+    .character-page-shell{
+      border:1px solid var(--border);
+      border-radius:38px;
+      background:linear-gradient(180deg,#0d0d10,#09090c);
+      padding:24px;
+      overflow:hidden;
+    }
+
+    .character-top-grid{
+      display:grid;
+      grid-template-columns:280px minmax(0,1fr);
+      gap:22px;
+      align-items:stretch;
+    }
+
+    .character-screen-card,
+    .route-stat-card,
+    .build-panel,
+    .character-items-panel{
+      border:1px solid var(--border);
+      background:var(--panel-2);
+      border-radius:18px;
+    }
+
+    .character-screen-card{
+      min-height:350px;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .character-screen-preview{
+      flex:1;
+      min-height:250px;
+      border:1px dashed var(--border-light);
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      color:var(--muted);
+      text-align:center;
+      background:#09090c;
+      cursor:pointer;
+      padding:14px;
+    }
+
+    .character-screen-preview img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+    }
+
+    .character-screen-input{display:none;}
+
+    .character-name-input{
+      width:100%;
+      border:1px solid var(--border);
+      background:#0e0e12;
+      color:var(--text);
+      border-radius:11px;
+      padding:11px 12px;
+      font-size:16px;
+      font-weight:700;
+      outline:none;
+    }
+
+    .character-name-input:focus{border-color:var(--border-light);}
+
+
+    .character-class-field{
+      display:grid;
+      gap:6px;
+    }
+
+    .character-class-field label{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.02em;
+    }
+
+    .character-class-select{
+      width:100%;
+      border:1px solid var(--border);
+      background:#0e0e12;
+      color:var(--text);
+      border-radius:11px;
+      padding:11px 12px;
+      font-size:14px;
+      outline:none;
+      cursor:pointer;
+    }
+
+    .character-class-select:focus{border-color:var(--border-light);}
+
+    .character-class-note{
+      margin:0;
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.45;
+    }
+
+    .route-stats-stack{
+      display:grid;
+      gap:12px;
+    }
+
+    .route-stat-card{
+      padding:14px 16px;
+      display:grid;
+      grid-template-columns:125px minmax(0,1fr) minmax(0,1fr);
+      gap:12px;
+      align-items:center;
+    }
+
+    .route-stat-name{
+      font-weight:800;
+      font-size:15px;
+    }
+
+    .route-stat-field label,
+    .build-label{
+      display:block;
+      color:var(--muted);
+      font-size:11px;
+      margin-bottom:5px;
+    }
+
+    .route-stat-field input,
+    .route-select,
+    .character-item-search{
+      width:100%;
+      border:1px solid var(--border);
+      background:#0e0e12;
+      color:var(--text);
+      border-radius:10px;
+      padding:10px 11px;
+      outline:none;
+    }
+
+    .route-stat-field input:focus,
+    .route-select:focus,
+    .character-item-search:focus{border-color:var(--border-light);}
+
+    .character-bottom-grid{
+      display:grid;
+      grid-template-columns:300px minmax(0,1fr);
+      gap:0;
+      margin-top:22px;
+      border:1px solid var(--border);
+      border-radius:22px;
+      overflow:hidden;
+      min-height:430px;
+    }
+
+    .build-panel,
+    .character-items-panel{
+      border:none;
+      border-radius:0;
+      padding:18px;
+    }
+
+    .character-items-panel{border-left:1px solid var(--border);}
+
+    .build-heading,
+    .character-items-heading{
+      margin:0 0 14px;
+      font-size:19px;
+    }
+
+    .build-route-row{margin-bottom:16px;}
+
+    .build-slots{
+      display:grid;
+      gap:9px;
+    }
+
+    .build-slot{
+      min-height:48px;
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#0e0e12;
+      color:var(--text);
+      padding:9px 11px;
+      text-align:left;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .build-slot.selected{
+      border-color:#90909c;
+      background:#18181e;
+      box-shadow:0 0 0 1px rgba(255,255,255,.12) inset;
+    }
+
+    .build-slot-empty{color:var(--muted);font-size:13px;}
+    .build-slot-name{font-weight:700;font-size:13px;}
+    .build-slot-remove{color:var(--muted);font-size:18px;line-height:1;}
+
+    .character-item-toolbar{
+      display:flex;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .character-items-list{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:9px;
+      align-content:start;
+      max-height:520px;
+      overflow:auto;
+      padding-right:4px;
+    }
+
+    .character-game-item{
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#101015;
+      color:var(--text);
+      text-align:left;
+      padding:11px 12px;
+      cursor:pointer;
+    }
+
+    .character-game-item:hover{
+      background:var(--panel-3);
+      border-color:var(--border-light);
+    }
+
+    .character-game-item strong{display:block;font-size:13px;margin-bottom:3px;}
+    .character-game-item span{display:block;color:var(--muted);font-size:11px;line-height:1.35;}
+
+    .character-help{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+      margin:0 0 12px;
+    }
+
+    @media (min-width:761px){
+      .hero-bar{grid-template-columns:repeat(5,1fr);}
+    }
+
+    @media (max-width:980px){
+      .character-top-grid{grid-template-columns:1fr;}
+      .character-screen-card{min-height:300px;}
+      .character-bottom-grid{grid-template-columns:1fr;}
+      .character-items-panel{border-left:none;border-top:1px solid var(--border);}
+    }
+
+    @media (max-width:760px){
+      .route-stat-card{grid-template-columns:1fr;}
+      .character-items-list{grid-template-columns:1fr;}
+      .character-page-shell{padding:16px;border-radius:26px;}
+    }
+
+  </style>
+</head>
+<body>
+  <main class="page">
+
+    <nav class="hero-bar" aria-label="Menu des héros">
+      <div class="hero" tabindex="0">
+        <div class="hero-name">Cai</div>
+        <div class="hero-menu">
+          <a class="menu-item inventory-link" href="#inventaire-cai" data-hero="Cai">Inventaire</a>
+          <a class="menu-item annexe-link" href="#annexe-cai" data-hero="Cai">Annexe</a>
+        </div>
+      </div>
+
+      <div class="hero" tabindex="0">
+        <div class="hero-name">Leda</div>
+        <div class="hero-menu">
+          <a class="menu-item inventory-link" href="#inventaire-leda" data-hero="Leda">Inventaire</a>
+          <a class="menu-item annexe-link" href="#annexe-leda" data-hero="Leda">Annexe</a>
+        </div>
+      </div>
+
+      <div class="hero" tabindex="0">
+        <div class="hero-name">Dietrich</div>
+        <div class="hero-menu">
+          <a class="menu-item inventory-link" href="#inventaire-dietrich" data-hero="Dietrich">Inventaire</a>
+          <a class="menu-item annexe-link" href="#annexe-dietrich" data-hero="Dietrich">Annexe</a>
+        </div>
+      </div>
+
+      <div class="hero" tabindex="0">
+        <div class="hero-name">Theodora</div>
+        <div class="hero-menu">
+          <a class="menu-item inventory-link" href="#inventaire-theodora" data-hero="Theodora">Inventaire</a>
+          <a class="menu-item annexe-link" href="#annexe-theodora" data-hero="Theodora">Annexe</a>
+        </div>
+      </div>
+
+      <div class="hero character-nav" tabindex="0">
+        <a class="hero-name character-link" id="characterLink" href="#personnage">Personnage</a>
+        <div class="character-roster-menu" aria-label="Liste des personnages jouables">
+          <div class="character-roster-head">
+            <div>
+              <strong>Personnages jouables</strong>
+              <span>Survole « Personnage », puis clique sur un nom pour ouvrir sa fiche.</span>
+            </div>
+            <div class="character-roster-count">63 jouables</div>
+          </div>
+          <div class="character-roster-grid">
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Armée du Sauveur</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-eshmel" data-character="Eshmel" title="Eshmel">Eshmel</a>
+              <a class="character-roster-item" href="#personnage-hong-hua" data-character="Hong Hua" title="Hong Hua">Hong Hua</a>
+              <a class="character-roster-item" href="#personnage-troy" data-character="Troy" title="Troy">Troy</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Ribeira Winds</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-cai" data-character="Cai" title="Cai">Cai</a>
+              <a class="character-roster-item" href="#personnage-tialla" data-character="Tialla" title="Tialla">Tialla</a>
+              <a class="character-roster-item" href="#personnage-peter" data-character="Peter" title="Peter">Peter</a>
+              <a class="character-roster-item" href="#personnage-ultand" data-character="Ultand" title="Ultand">Ultand</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">House Lamine</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-dietrich" data-character="Dietrich" title="Dietrich">Dietrich</a>
+              <a class="character-roster-item" href="#personnage-fabio" data-character="Fabio" title="Fabio">Fabio</a>
+              <a class="character-roster-item" href="#personnage-esmeralda" data-character="Esmeralda" title="Esmeralda">Esmeralda</a>
+              <a class="character-roster-item" href="#personnage-mikaela" data-character="Mikaela" title="Mikaela">Mikaela</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Megaira's Beacon</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-theodora" data-character="Theodora" title="Theodora">Theodora</a>
+              <a class="character-roster-item" href="#personnage-bonaventure" data-character="Bonaventure" title="Bonaventure">Bonaventure</a>
+              <a class="character-roster-item" href="#personnage-tobias" data-character="Tobias" title="Tobias">Tobias</a>
+              <a class="character-roster-item" href="#personnage-lysander" data-character="Lysander" title="Lysander">Lysander</a>
+              <a class="character-roster-item" href="#personnage-lilian" data-character="Lilian" title="Lilian">Lilian</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Rose Tempest</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-leda" data-character="Leda" title="Leda">Leda</a>
+              <a class="character-roster-item" href="#personnage-buccar" data-character="Buccar" title="Buccar">Buccar</a>
+              <a class="character-roster-item" href="#personnage-sirocco" data-character="Sirocco" title="Sirocco">Sirocco</a>
+              <a class="character-roster-item" href="#personnage-mu" data-character="Mu" title="Mu">Mu</a>
+              <a class="character-roster-item" href="#personnage-olympia" data-character="Olympia" title="Olympia">Olympia</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Mane of Flames</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-bertrand" data-character="Bertrand" title="Bertrand">Bertrand</a>
+              <a class="character-roster-item" href="#personnage-gaitz" data-character="Gaitz" title="Gaitz">Gaitz</a>
+              <a class="character-roster-item" href="#personnage-dante" data-character="Dante" title="Dante">Dante</a>
+              <a class="character-roster-item" href="#personnage-goliath" data-character="Goliath" title="Goliath">Goliath</a>
+              <a class="character-roster-item" href="#personnage-jester" data-character="Jester" title="Jester">Jester</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Tale of the Moon</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-talimun" data-character="Talimun" title="Talimun">Talimun</a>
+              <a class="character-roster-item" href="#personnage-ursula" data-character="Ursula" title="Ursula">Ursula</a>
+              <a class="character-roster-item" href="#personnage-simon" data-character="Simon" title="Simon">Simon</a>
+              <a class="character-roster-item" href="#personnage-ludia" data-character="Ludia" title="Ludia">Ludia</a>
+              <a class="character-roster-item" href="#personnage-fianna" data-character="Fianna" title="Fianna">Fianna</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Linaria Dewdrops</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-orchel" data-character="Orchel" title="Orchel">Orchel</a>
+              <a class="character-roster-item" href="#personnage-diego" data-character="Diego" title="Diego">Diego</a>
+              <a class="character-roster-item" href="#personnage-ninae" data-character="Ninae" title="Ninae">Ninae</a>
+              <a class="character-roster-item" href="#personnage-seteth" data-character="Seteth" title="Seteth">Seteth</a>
+              <a class="character-roster-item" href="#personnage-loretta" data-character="Loretta" title="Loretta">Loretta</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Brides of the Pale Raven</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-anatolia" data-character="Anatolia" title="Anatolia">Anatolia</a>
+              <a class="character-roster-item" href="#personnage-sha-lan" data-character="Sha Lan" title="Sha Lan">Sha Lan</a>
+              <a class="character-roster-item" href="#personnage-nezha" data-character="Nezha" title="Nezha">Nezha</a>
+              <a class="character-roster-item" href="#personnage-dadao" data-character="Dadao" title="Dadao">Dadao</a>
+              <a class="character-roster-item" href="#personnage-halvin" data-character="Halvin" title="Halvin">Halvin</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Autres clans</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-benditz" data-character="Benditz" title="Benditz">Benditz</a>
+              <a class="character-roster-item" href="#personnage-alexandra" data-character="Alexandra" title="Alexandra">Alexandra</a>
+              <a class="character-roster-item" href="#personnage-zarcone" data-character="Zarcone" title="Zarcone">Zarcone</a>
+              <a class="character-roster-item" href="#personnage-jasmine" data-character="Jasmine" title="Jasmine">Jasmine</a>
+              <a class="character-roster-item" href="#personnage-kiroc" data-character="Kiroc" title="Kiroc">Kiroc</a>
+              <a class="character-roster-item" href="#personnage-inyoni" data-character="Inyoni" title="Inyoni">Inyoni</a>
+              <a class="character-roster-item" href="#personnage-peppe" data-character="Peppe" title="Peppe">Peppe</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Neutres / recrutables</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-guzran" data-character="Guzran" title="Guzran">Guzran</a>
+              <a class="character-roster-item" href="#personnage-nydine" data-character="Nydine" title="Nydine">Nydine</a>
+              <a class="character-roster-item" href="#personnage-io" data-character="Io" title="Io">Io</a>
+              <a class="character-roster-item" href="#personnage-catania" data-character="Catania" title="Catania">Catania</a>
+              <a class="character-roster-item" href="#personnage-noctula" data-character="Noctula" title="Noctula">Noctula</a>
+              <a class="character-roster-item" href="#personnage-yang-jie" data-character="Yang Jie" title="Yang Jie">Yang Jie</a>
+              <a class="character-roster-item" href="#personnage-nuzzuo" data-character="Nuzzuo" title="Nuzzuo">Nuzzuo</a>
+              <a class="character-roster-item" href="#personnage-majide" data-character="Majide" title="Majide">Majide</a>
+            </div>
+          </section>
+          <section class="character-roster-group">
+            <h3 class="character-roster-title">Temple / tardifs</h3>
+            <div class="character-roster-items">
+              <a class="character-roster-item" href="#personnage-sofia" data-character="Sofia" title="Sofia">Sofia</a>
+              <a class="character-roster-item" href="#personnage-creek" data-character="Creek" title="Creek">Creek</a>
+              <a class="character-roster-item" href="#personnage-nathan" data-character="Nathan" title="Nathan">Nathan</a>
+              <a class="character-roster-item" href="#personnage-centurio" data-character="Centurio" title="Centurio">Centurio</a>
+              <a class="character-roster-item" href="#personnage-aswan" data-character="Aswan" title="Aswan">Aswan</a>
+              <a class="character-roster-item" href="#personnage-tahonia" data-character="Tahonia" title="Tahonia">Tahonia</a>
+              <a class="character-roster-item" href="#personnage-klapka" data-character="Klapka" title="Klapka">Klapka</a>
+            </div>
+          </section>
+          </div>
+          <div class="character-roster-foot">
+            Liste de travail vérifiée au 30/09/2026. Les invités temporaires (par ex. Castor, Long, Maria) ne sont pas inclus. Les noms utilisent la localisation anglaise lorsqu’un nom français exact n’est pas encore confirmé.
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <section class="content">
+      <div id="welcome" class="welcome">
+        <div>
+          <strong>Fortune’s Weave — suivi des héros</strong>
+          Survole le nom d’un héros puis clique sur <b>Inventaire</b>.<br>
+          L’inventaire s’ouvrira ici sans quitter cette page.
+        </div>
+      </div>
+
+      <section id="inventoryView" class="inventory-view">
+        <div class="inventory-head">
+          <div>
+            <h1 class="inventory-title">Inventaire — <span id="currentHeroName">Cai</span></h1>
+            <p class="inventory-subtitle">Le menu des 4 héros reste toujours disponible au-dessus. Les inventaires ne se remplissent plus automatiquement après avoir été vidés. Le relevé partiel de Cai du 29/09/2026 reste disponible uniquement via le bouton de restauration.</p>
+          </div>
+          <div class="inventory-head-actions">
+            <button class="btn" id="restoreCaiInventory" type="button" style="display:none;">Restaurer le relevé Cai du 29/09</button>
+            <button class="btn" id="clearHeroInventory" type="button">Vider cet inventaire</button>
+          </div>
+        </div>
+
+        <div class="inventory-layout">
+          <section class="inventory-panel">
+            <h2>Item du héros</h2>
+            <p class="panel-note">
+              Les quantités appartiennent uniquement au héros actuellement sélectionné.
+            </p>
+
+            <div class="stats">
+              <span class="chip" id="distinctCount">0 item différent</span>
+              <span class="chip" id="copyCount">0 exemplaire</span>
+            </div>
+
+            <div class="inventory-toolbar">
+              <input class="search" id="inventorySearch" type="search" placeholder="Rechercher dans l’inventaire du héros">
+            </div>
+
+            <div class="inventory-list" id="inventoryList"></div>
+          </section>
+
+          <section class="inventory-panel">
+            <h2>Items du jeu</h2>
+            <p class="panel-note">
+              Liste commune aux 4 héros, triée par ordre alphabétique. Clique plusieurs fois sur le même item pour augmenter sa quantité.
+            </p>
+
+            <div class="stats">
+              <span class="chip" id="catalogCount">0 item du jeu</span>
+            </div>
+
+            <form class="add-item-form" id="addCatalogItemForm" autocomplete="off">
+              <input class="text-input" id="newCatalogItem" type="text" placeholder="Ajouter un nouvel item du jeu">
+              <button class="btn" type="submit">Ajouter</button>
+            </form>
+
+            <div class="catalog-toolbar">
+              <input class="search" id="catalogSearch" type="search" placeholder="Rechercher dans les items du jeu">
+            </div>
+
+            <div class="catalog-list" id="catalogList"></div>
+          </section>
+        </div>
+      </section>
+
+
+
+      <section id="characterView" class="character-view">
+        <div class="inventory-head">
+          <div>
+            <h1 class="inventory-title">Personnage — <span id="currentCharacterName">Cai</span></h1>
+            <p class="inventory-subtitle">Fiche individuelle : capture, comparaison entre routes et build actuel.</p>
+          </div>
+        </div>
+
+        <div class="character-page-shell">
+          <div class="character-top-grid">
+            <section class="character-screen-card">
+              <input id="characterName" class="character-name-input" type="text" placeholder="Nom du personnage">
+              <label id="characterScreenPreview" class="character-screen-preview" for="characterScreenInput">
+                <span id="characterScreenPlaceholder">Cliquer ici pour ajouter une image</span>
+                <img id="characterScreenImage" alt="Screen du personnage" style="display:none;">
+              </label>
+              <input id="characterScreenInput" class="character-screen-input" type="file" accept="image/*">
+              <div class="character-class-field">
+                <label for="characterClass">Classe actuelle</label>
+                <select id="characterClass" class="character-class-select">
+                  <option value="">— Choisir une classe —</option>
+                  <optgroup label="Base">
+                    <option value="Commoner">Commoner</option>
+                    <option value="Noble">Noble</option>
+                  </optgroup>
+                  <optgroup label="Beginner">
+                    <option value="Gladiator">Gladiator</option>
+                    <option value="Hunter">Hunter</option>
+                    <option value="Soldier">Soldier</option>
+                    <option value="Ornius Rider">Ornius Rider</option>
+                    <option value="Diviner">Diviner</option>
+                  </optgroup>
+                  <optgroup label="Specialty">
+                    <option value="Myrmidon">Myrmidon</option>
+                    <option value="Brigand">Brigand</option>
+                    <option value="Pugilist">Pugilist</option>
+                    <option value="Archer">Archer</option>
+                    <option value="Rogue">Rogue</option>
+                    <option value="Armored Knight">Armored Knight</option>
+                    <option value="Light Cavalry">Light Cavalry</option>
+                    <option value="Charioteer">Charioteer</option>
+                    <option value="Armored Ornius Rider">Armored Ornius Rider</option>
+                    <option value="Wing Soldier">Wing Soldier</option>
+                    <option value="Shaman">Shaman</option>
+                    <option value="Priest">Priest</option>
+                  </optgroup>
+                  <optgroup label="Advanced">
+                    <option value="Shido">Shido</option>
+                    <option value="Warrior">Warrior</option>
+                    <option value="Sniper">Sniper</option>
+                    <option value="Forest Knight">Forest Knight</option>
+                    <option value="Dreadnought">Dreadnought</option>
+                    <option value="Bardinger">Bardinger</option>
+                    <option value="Ovate">Ovate</option>
+                    <option value="Bishop">Bishop</option>
+                    <option value="Elephant Rider">Elephant Rider</option>
+                    <option value="Caladrius">Caladrius</option>
+                    <option value="Dragoon">Dragoon</option>
+                    <option value="Troubadour">Troubadour</option>
+                    <option value="Dancer">Dancer</option>
+                    <option value="Guardian">Guardian</option>
+                    <option value="Ranger">Ranger</option>
+                    <option value="Cataphract">Cataphract</option>
+                    <option value="Blacksmith">Blacksmith</option>
+                  </optgroup>
+                  <optgroup label="Master">
+                    <option value="Battlemaster">Battlemaster</option>
+                    <option value="Bow Adept">Bow Adept</option>
+                    <option value="Shadow Seeker">Shadow Seeker</option>
+                    <option value="Sentinel">Sentinel</option>
+                    <option value="Castle Knight">Castle Knight</option>
+                    <option value="Orichaldia">Orichaldia</option>
+                    <option value="Celestial Trooper">Celestial Trooper</option>
+                    <option value="Bau Lord">Bau Lord</option>
+                    <option value="Druid">Druid</option>
+                    <option value="Wiseman">Wiseman</option>
+                    <option value="Swordmaster">Swordmaster</option>
+                    <option value="War Monk">War Monk</option>
+                    <option value="Bow Knight">Bow Knight</option>
+                    <option value="Great Knight">Great Knight</option>
+                    <option value="Valkyrium">Valkyrium</option>
+                    <option value="High Savant">High Savant</option>
+                  </optgroup>
+                  <optgroup label="Divine">
+                    <option value="The Blade">The Blade</option>
+                    <option value="The Apsara">The Apsara</option>
+                    <option value="The Eternal">The Eternal</option>
+                    <option value="The Godhand">The Godhand</option>
+                    <option value="The Calamity">The Calamity</option>
+                    <option value="The Trident">The Trident</option>
+                    <option value="The Cavalier">The Cavalier</option>
+                    <option value="The Avatar">The Avatar</option>
+                  </optgroup>
+                </select>
+                <p class="character-class-note">Noms anglais lorsque le nom français exact n’est pas encore confirmé.</p>
+              </div>
+              <p class="character-screen-note">Choisis simplement une image : elle s’affiche dans cette fiche pendant que la page reste ouverte.</p>
+            </section>
+
+            <section class="route-stats-stack">
+              <article class="route-stat-card" data-route="Cai">
+                <div class="route-stat-name">Route Cai</div>
+                <div class="route-stat-field"><label>Stats fin de Partie I</label><input data-stat="part1" type="text" placeholder="Ex. niv. 35 · éval. 160 · PV... "></div>
+                <div class="route-stat-field"><label>Stats fin de Partie II</label><input data-stat="part2" type="text" placeholder="À remplir plus tard"></div>
+              </article>
+              <article class="route-stat-card" data-route="Leda">
+                <div class="route-stat-name">Route Leda</div>
+                <div class="route-stat-field"><label>Stats fin de Partie I</label><input data-stat="part1" type="text" placeholder="À remplir"></div>
+                <div class="route-stat-field"><label>Stats fin de Partie II</label><input data-stat="part2" type="text" placeholder="À remplir plus tard"></div>
+              </article>
+              <article class="route-stat-card" data-route="Dietrich">
+                <div class="route-stat-name">Route Dietrich</div>
+                <div class="route-stat-field"><label>Stats fin de Partie I</label><input data-stat="part1" type="text" placeholder="À remplir"></div>
+                <div class="route-stat-field"><label>Stats fin de Partie II</label><input data-stat="part2" type="text" placeholder="À remplir plus tard"></div>
+              </article>
+              <article class="route-stat-card" data-route="Theodora">
+                <div class="route-stat-name">Route Theodora</div>
+                <div class="route-stat-field"><label>Stats fin de Partie I</label><input data-stat="part1" type="text" placeholder="À remplir"></div>
+                <div class="route-stat-field"><label>Stats fin de Partie II</label><input data-stat="part2" type="text" placeholder="À remplir plus tard"></div>
+              </article>
+            </section>
+          </div>
+
+          <div class="character-bottom-grid">
+            <section class="build-panel">
+              <h2 class="build-heading">Build actuel</h2>
+              <div class="build-route-row">
+                <label class="build-label" for="characterRoute">Route du build</label>
+                <select id="characterRoute" class="route-select">
+                  <option value="Cai">Cai</option>
+                  <option value="Leda">Leda</option>
+                  <option value="Dietrich">Dietrich</option>
+                  <option value="Theodora">Theodora</option>
+                </select>
+              </div>
+              <p class="character-help">6 emplacements. Sélectionne une case puis clique sur un item du jeu à droite.</p>
+              <div id="characterBuildSlots" class="build-slots"></div>
+            </section>
+
+            <section class="character-items-panel">
+              <h2 class="character-items-heading">Items du jeu</h2>
+              <p class="character-help">Cette liste utilise exactement la même base que les inventaires des héros. Aucun nouvel objet n’est créé ici.</p>
+              <div class="character-item-toolbar">
+                <input id="characterItemSearch" class="character-item-search" type="search" placeholder="Rechercher un item du jeu">
+              </div>
+              <div id="characterItemsList" class="character-items-list"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section id="paralogueView" class="paralogue-view">
+        <div class="paralogue-head">
+          <div>
+            <h1 class="paralogue-title">Annexes / Paralogues — <span id="paralogueHeroName">Cai</span></h1>
+            <p class="paralogue-subtitle">
+              Dates du calendrier <strong>dans le jeu</strong>. « Fenêtre d’acceptation » indique quand la quête peut être prise ; « échéance » indique la date limite lorsqu’elle est différente. Les titres ci-dessous sont les titres anglais vérifiés dans les guides anglophones.
+            </p>
+          </div>
+        </div>
+
+        <div id="paralogueSummary" class="paralogue-summary"></div>
+        <div id="paralogueList" class="paralogue-grid"></div>
+
+        <div class="paralogue-source-note">
+          <strong>Vérification :</strong> données recoupées en priorité avec les walkthroughs de route et le guide complet des Paralogues de RPG Site, puis avec Pocket Tactics, The Games Wiki, KeenGamer et d’autres guides anglophones récents. Lorsqu’une source générale et un walkthrough de route ne donnent pas exactement la même fenêtre, la page le signale au lieu de masquer le désaccord.
+        </div>
+      </section>
+
+    </section>
+  </main>
+
+  <div class="effect-modal" id="effectModal" aria-hidden="true">
+    <div class="effect-modal-card" role="dialog" aria-modal="true" aria-labelledby="effectModalTitle">
+      <div class="effect-modal-head">
+        <h3 id="effectModalTitle">Modifier l’effet</h3>
+        <button class="effect-modal-close" id="effectModalClose" type="button" aria-label="Fermer">×</button>
+      </div>
+      <div class="effect-modal-body">
+        <label class="effect-modal-label" for="effectModalText">Texte de l’effet</label>
+        <textarea class="effect-modal-textarea" id="effectModalText"></textarea>
+        <div class="effect-modal-actions">
+          <button class="btn" id="effectModalCancel" type="button">Annuler</button>
+          <button class="btn" id="effectModalSave" type="button">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="effect-modal" id="clearInventoryModal" aria-hidden="true">
+    <div class="effect-modal-card" role="dialog" aria-modal="true" aria-labelledby="clearInventoryModalTitle">
+      <div class="effect-modal-head">
+        <h3 id="clearInventoryModalTitle">Vider l’inventaire</h3>
+        <button class="effect-modal-close" id="clearInventoryModalClose" type="button" aria-label="Fermer">×</button>
+      </div>
+      <div class="effect-modal-body">
+        <p id="clearInventoryModalText" style="margin:0;color:var(--muted);line-height:1.55"></p>
+        <div class="effect-modal-actions">
+          <button class="btn" id="clearInventoryModalCancel" type="button">Annuler</button>
+          <button class="btn" id="clearInventoryModalConfirm" type="button">Vider</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    (() => {
+      const heroes = ["Cai","Leda","Dietrich","Theodora"];
+
+      const PARALOGUE_DATA = {
+        Cai: [
+          {
+            owner:"Bertrand",
+            title:"Friendly Match with Brigid's King",
+            chapter:"Partie I · Chapitre 10",
+            accept:"17/09 → 25/09",
+            deadline:"25/09",
+            location:"Arena Square — parler à Gabriel",
+            note:"Fenêtre confirmée par le walkthrough de Cai et le guide général RPG Site."
+          },
+          {
+            owner:"Talimun",
+            title:"Secret of the Vanished Carriage",
+            chapter:"Partie I · Chapitre 10",
+            accept:"17/09 → 22/09 OU 01/10 → 10/10",
+            deadline:"12/10",
+            location:"Port — parler à Talimun",
+            note:"Deux fenêtres d’acceptation ; l’échéance finale est plus tardive que la seconde fenêtre."
+          },
+          {
+            owner:"Anna",
+            title:"Golden Secret",
+            chapter:"Partie I · Chapitre 10",
+            accept:"24/09 → 05/10",
+            deadline:"05/10",
+            location:"Dagsion Summit — parler à Anna",
+            note:"Date recoupée entre RPG Site, Pocket Tactics et The Games Wiki."
+          },
+          {
+            owner:"Orchel",
+            title:"Orchel's Regret",
+            chapter:"Partie I · Chapitre 11",
+            accept:"18/10 → 20/10",
+            deadline:"21/10",
+            location:"Lower Temple Row — parler à Orchel",
+            note:"La route de Cai possède une fenêtre plus courte que les autres routes."
+          }
+        ],
+        Dietrich: [
+          {
+            owner:"Leda",
+            title:"Diversionary Tactics",
+            chapter:"Partie I · Chapitre 9",
+            accept:"02/09 → 08/09",
+            deadline:"08/09",
+            location:"Temple Row — parler à Leda",
+            note:"RPG Site indique que la bataille a lieu spécifiquement le 08/09."
+          },
+          {
+            owner:"Theodora",
+            title:"Missing Brave-Warrior Statue",
+            chapter:"Partie I · Chapitre 9",
+            accept:"03/09 → 12/09",
+            deadline:"15/09",
+            location:"Temple Row — parler à Bonaventure",
+            note:"La quête peut être acceptée jusqu’au 12/09 mais terminée jusqu’au 15/09."
+          },
+          {
+            owner:"Bertrand",
+            title:"Friendly Match with Brigid's King",
+            chapter:"Partie I · Chapitre 9",
+            accept:"17/09 uniquement",
+            deadline:"17/09",
+            location:"Arena Square — parler à Gabriel",
+            note:"Fenêtre d’une seule journée : c’est la fenêtre de Paralogue la plus courte documentée."
+          },
+          {
+            owner:"Talimun",
+            title:"Secret of the Vanished Carriage",
+            chapter:"Partie I · Chapitres 9–10",
+            accept:"17/09 → 19/09 OU 01/10 → 10/10",
+            deadline:"12/10",
+            location:"Port — parler à Talimun",
+            note:"Le guide général donne 17/09→22/09, mais le walkthrough de Dietrich limite la première fenêtre au 19/09 car son chapitre 9 se termine ce jour-là.",
+            warning:true
+          },
+          {
+            owner:"Anna",
+            title:"Golden Secret",
+            chapter:"Partie I · Chapitre 10",
+            accept:"29/09 → 05/10",
+            deadline:"05/10",
+            location:"Dagsion Summit — parler à Anna",
+            note:"La route de Dietrich commence cette annexe plus tard que Cai et Theodora."
+          },
+          {
+            owner:"Anatolia",
+            title:"Queen of the Erased",
+            chapter:"Partie I · Chapitre 11",
+            accept:"05/10 → 14/10",
+            deadline:"17/10",
+            location:"City Streets — parler à Anatolia",
+            note:"Fenêtre d’acceptation confirmée ; l’échéance est le 17/10."
+          },
+          {
+            owner:"Cai",
+            title:"Great Escape",
+            chapter:"Partie I · Chapitre 11",
+            accept:"16/10 → 22/10",
+            deadline:"22/10",
+            location:"City Streets — parler à Cai",
+            note:"RPG Site indique que la bataille se déroule spécifiquement le 22/10. Certains guides secondaires mentionnent le 23/10 : à vérifier sur l’écran du jeu si nécessaire.",
+            warning:true
+          },
+          {
+            owner:"Orchel",
+            title:"Orchel's Regret",
+            chapter:"Partie I · Chapitre 11",
+            accept:"18/10 → 25/10",
+            deadline:"27/10",
+            location:"Lower Temple Row — parler à Orchel",
+            note:"Fenêtre et échéance recoupées dans plusieurs guides anglophones."
+          }
+        ],
+        Theodora: [
+          {
+            owner:"Leda",
+            title:"Diversionary Tactics",
+            chapter:"Partie I · Chapitre 10",
+            accept:"02/09 → 08/09",
+            deadline:"08/09",
+            location:"Temple Row — parler à Leda",
+            note:"RPG Site indique que la bataille a lieu spécifiquement le 08/09."
+          },
+          {
+            owner:"Bertrand",
+            title:"Friendly Match with Brigid's King",
+            chapter:"Partie I · Chapitre 11",
+            accept:"17/09 → 25/09",
+            deadline:"25/09",
+            location:"Arena Square — parler à Gabriel",
+            note:"Le combat démarre à 21 h le jour choisi selon le walkthrough de Theodora."
+          },
+          {
+            owner:"Talimun",
+            title:"Secret of the Vanished Carriage",
+            chapter:"Partie I · Chapitre 11",
+            accept:"17/09 → 22/09 OU 01/10 → 10/10",
+            deadline:"12/10",
+            location:"Port — parler à Talimun",
+            note:"Deux fenêtres d’acceptation ; échéance finale le 12/10."
+          },
+          {
+            owner:"Anna",
+            title:"Golden Secret",
+            chapter:"Partie I · Chapitre 11",
+            accept:"24/09 → 05/10",
+            deadline:"05/10",
+            location:"Dagsion Summit — parler à Anna",
+            note:"Fenêtre recoupée entre plusieurs guides anglophones."
+          },
+          {
+            owner:"Cai",
+            title:"Great Escape",
+            chapter:"Partie I · Chapitre 12",
+            accept:"16/10 → 22/10",
+            deadline:"22/10",
+            location:"City Streets — parler à Cai",
+            note:"RPG Site place la bataille au 22/10 ; certains guides secondaires indiquent un déclenchement forcé le 23/10.",
+            warning:true
+          },
+          {
+            owner:"Dietrich",
+            title:"Sealed-Off Past",
+            chapter:"Partie I · Chapitre 12",
+            accept:"16/10 → 24/10",
+            deadline:"24/10 (limite réelle de la route)",
+            location:"Arena — parler à Fabio",
+            note:"La page de quête peut afficher une échéance au 01/11, mais la Partie I de Theodora se termine le 24/10 : le 24/10 est donc la limite pratique.",
+            warning:true
+          },
+          {
+            owner:"Orchel",
+            title:"Orchel's Regret",
+            chapter:"Partie I · Chapitre 12",
+            accept:"18/10 → 24/10",
+            deadline:"24/10 (limite réelle de la route)",
+            location:"Lower Temple Row — parler à Orchel",
+            note:"La quête peut afficher 27/10, mais la route de Theodora se termine le 24/10."
+          }
+        ],
+        Leda: [
+          {
+            owner:"Anatolia",
+            title:"Queen of the Erased",
+            chapter:"Partie I · Chapitre 10",
+            accept:"05/10 → 14/10",
+            deadline:"17/10",
+            location:"City Streets — parler à Anatolia",
+            note:"RPG Site et The Games Wiki concordent sur la fenêtre et l’échéance."
+          },
+          {
+            owner:"Cai",
+            title:"Great Escape",
+            chapter:"Partie I · Chapitre 11",
+            accept:"16/10 → 22/10",
+            deadline:"22/10",
+            location:"City Streets — parler à Cai",
+            note:"RPG Site place la bataille au 22/10 ; certains guides secondaires indiquent le 23/10.",
+            warning:true
+          },
+          {
+            owner:"Dietrich",
+            title:"Sealed-Off Past",
+            chapter:"Partie I · Chapitre 11",
+            accept:"16/10 → 29/10 (walkthrough de Leda)",
+            deadline:"01/11",
+            location:"Arena — parler à Fabio",
+            note:"Conflit de sources : le walkthrough RPG Site de Leda indique 16/10→29/10, tandis que le guide général RPG Site et plusieurs tableaux indiquent 16/10→22/10. L’échéance 01/11 est cohérente entre les sources.",
+            warning:true
+          },
+          {
+            owner:"Orchel",
+            title:"Orchel's Regret",
+            chapter:"Partie I · Chapitre 11",
+            accept:"18/10 → 25/10",
+            deadline:"27/10",
+            location:"Lower Temple Row — parler à Orchel",
+            note:"Fenêtre et échéance recoupées dans plusieurs guides anglophones."
+          }
+        ]
+      };
+      const CATALOG_KEY_V1 = "fw_game_items_catalog_v1";
+      const CATALOG_KEY_V2 = "fw_game_items_catalog_v2";
+      const CATALOG_KEY_V3 = "fw_game_items_catalog_v3";
+      const CATALOG_KEY = "fw_game_items_catalog_v4";
+      const HERO_KEY = hero => `fw_hero_inventory_${hero}_v1`;
+      const DEFAULT_CAI_INVENTORY = {
+              "Épée en bois": 2,
+              "Épée en bronze": 2,
+              "Épée en fer": 6,
+              "Épée en fer +1": 1,
+              "Épée Da Mina": 1,
+              "Zambato": 1,
+              "Fer létal": 1,
+              "Flissa": 2,
+              "Épée orage": 2,
+              "Lame ouragan": 2,
+              "Lame purificatrice": 1,
+              "Veroquine": 1,
+              "Épée d'élu": 1,
+              "Épée royale": 1,
+              "Lance en bois": 3,
+              "Lance en bronze": 2,
+              "Lance en fer": 3,
+              "Lance en fer +1": 1,
+              "Lance Da Mina": 1,
+              "Javelot": 3,
+              "Javelot +1": 1,
+              "Petit épieu": 2,
+              "Épieu": 1,
+              "Hallebarde": 1,
+              "Lance stellaire": 1,
+              "Lance d'Assal": 1,
+              "Lance d'élue": 1,
+              "Hache en bois": 4,
+              "Hache en fer": 5,
+              "Hache Da Mina": 1,
+              "Hachette": 2,
+              "Hache courte": 2,
+              "Hache écrasante": 1,
+              "Massue": 2,
+              "Velheit": 1,
+              "Arc en bois": 2,
+              "Arc en fer": 3,
+              "Arc Da Mina": 1,
+              "Arc de chasseur": 2,
+              "Arc long": 2,
+              "Arc anti-cavalerie": 1,
+              "Arc de guerre": 1,
+              "Arc tempétueux": 3,
+              "Arc venin": 2,
+              "Arc d'Azaga": 1,
+              "Gantelets en bois": 1,
+              "Gantelets en bronze": 2,
+              "Gantelets en fer": 2,
+              "Gantelets solides": 1,
+              "Roues du cosmos": 1,
+              "Salamandre": 1,
+              "Breidablik": 1,
+              "Écu en fer": 1,
+              "Écu talisman": 1,
+              "Écu anti-mage": 1,
+              "Bâton de l'ordre": 1,
+              "Bâton de soin": 2,
+              "Masque tourmente": 1,
+              "Anneau d'archer": 1,
+              "Gemme frénésie": 1,
+              "Gemme naturelle": 1,
+              "Gemme miracle": 1,
+              "Amulette anti-arc": 1,
+              "Flagelleur curatif": 1,
+              "Potion": 11,
+              "Breuvage": 11
+      };
+
+      // Migration des anciens noms japonais vers les noms anglais.
+      // Les noms marqués "provisoire" ne sont pas présentés comme une localisation officielle.
+      const ITEM_NAME_MIGRATIONS = {
+        "戦術指南書": {name:"Tactics Manual", verified:true},
+        "馬術指南書": {name:"Riding Manual", verified:true},
+        "重装術指南書": {name:"Heavy-Armor Manual", verified:true},
+        "飛行術指南書": {name:"Flying Manual", verified:true},
+        "黒魔術指南書": {name:"Black-Magic Manual", verified:true},
+        "白魔術指南書": {name:"White-Magic Manual", verified:true},
+        "祝品箱": {name:"Gift Box", verified:true},
+        "指輪箱": {name:"Ring Box", verified:false},
+        "謎の箱": {name:"Mystery Box", verified:false},
+        "肉箱": {name:"Meat Crate", verified:true},
+        "書箱": {name:"Manual Crate", verified:true},
+        "宝の鍵": {name:"Chest Key", verified:true},
+        "初級試験手形": {name:"Beginner License", verified:true},
+        "カーネボニート": {name:"Carna Bonito", verified:true},
+        "ゴールドトラウト": {name:"Gold Trout", verified:false},
+        "ウサモス": {name:"Usamos", verified:true},
+        "メルトフィッシュ": {name:"Meltfish", verified:true},
+        "ムーンフィッシュ": {name:"Moonfish", verified:true},
+        "テフノミ": {name:"Tefunomi", verified:false},
+        "砂金": {name:"Gold Dust", verified:false},
+        "大砂金": {name:"Large Gold Dust", verified:false},
+        "金塊": {name:"Bullion", verified:true}
+      };
+
+      const defaultCatalog = [
+        {
+                "name": "Amulette anti-arc",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "4",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "6e nouvelle capture",
+                "price": "",
+                "effect": "Contre un adversaire équipé d'un arc : Précision +15 et Esquive +15 ; poids +4.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/817533",
+                "check": ""
+        },
+        {
+                "name": "Anneau d'archer",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "3",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "5e nouvelle capture",
+                "price": "",
+                "effect": "Précision +5 ; poids +3.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/817533",
+                "check": ""
+        },
+        {
+                "name": "Arc anti-cavalerie",
+                "category": "Arc",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20",
+                "rank": "C",
+                "power": "10",
+                "accuracy": "70",
+                "weight": "8",
+                "range": "2",
+                "observedCountCai": "1",
+                "capture": "2e–3e nouvelle capture",
+                "price": "",
+                "effect": "Efficacité accrue contre la cavalerie / les unités montées.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819540",
+                "check": ""
+        },
+        {
+                "name": "Arc d'Azaga",
+                "category": "Arc",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20",
+                "rank": "A",
+                "power": "10",
+                "accuracy": "65",
+                "weight": "10",
+                "range": "2",
+                "observedCountCai": "1",
+                "capture": "3e nouvelle capture",
+                "price": "",
+                "effect": "Arc maudit de rang A. Art « Tir funeste / 禍射 » : coût 5, précision −50 ; en cas de réussite, immobilise la cible et bloque sa magie. Pas d'attaque de suivi avec cet Art.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819470",
+                "check": ""
+        },
+        {
+                "name": "Arc Da Mina",
+                "category": "Arc",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "23/25",
+                "rank": "C",
+                "power": "12",
+                "accuracy": "70",
+                "weight": "6",
+                "range": "2",
+                "observedCountCai": "1",
+                "capture": "2e nouvelle capture",
+                "price": "",
+                "effect": "Précision +10 lors d'une attaque utilisant un Art de combat.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819540",
+                "check": ""
+        },
+        {
+                "name": "Arc de chasseur",
+                "category": "Arc",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ; 10/20",
+                "rank": "D",
+                "power": "6",
+                "accuracy": "70",
+                "weight": "7",
+                "range": "2",
+                "observedCountCai": "2",
+                "capture": "2e nouvelle capture",
+                "price": "",
+                "effect": "Arc composite léger ; l'effet particulier exact des icônes visibles en jeu n'est pas décrit sur la fiche japonaise.",
+                "status": "À confirmer",
+                "source": "https://game8.jp/fe-banshisenko/819540",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Arc de guerre",
+                "category": "Arc",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "25/25",
+                "rank": "C",
+                "power": "14",
+                "accuracy": "50",
+                "weight": "14",
+                "range": "2",
+                "observedCountCai": "1",
+                "capture": "3e nouvelle capture",
+                "price": "",
+                "effect": "Arc lourd à forte puissance de base, faible précision ; pas de passif spécial recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819540",
+                "check": ""
+        },
+        {
+                "name": "Arc en bois",
+                "category": "Arc",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "10/10 ×2",
+                "rank": "E",
+                "power": "2",
+                "accuracy": "75",
+                "weight": "4",
+                "range": "2",
+                "observedCountCai": "2",
+                "capture": "2e nouvelle capture",
+                "price": "",
+                "effect": "Arc standard, portée 2 ; pas d'effet passif supplémentaire recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819540",
+                "check": ""
+        },
+        {
+                "name": "Arc en fer",
+                "category": "Arc",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ×3",
+                "rank": "D",
+                "power": "9",
+                "accuracy": "75",
+                "weight": "6",
+                "range": "2",
+                "observedCountCai": "3",
+                "capture": "2e nouvelle capture",
+                "price": "",
+                "effect": "Arc standard, portée 2 ; pas d'effet passif supplémentaire recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819540",
+                "check": ""
+        },
+        {
+                "name": "Arc long",
+                "category": "Arc",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ; 0/20",
+                "rank": "C",
+                "power": "12",
+                "accuracy": "60",
+                "weight": "13",
+                "range": "2",
+                "observedCountCai": "2",
+                "capture": "2e nouvelle capture",
+                "price": "",
+                "effect": "Donne accès à l'Art « Tir de précision / Sniper » ; portée de base indiquée 2 dans Game8. Un de tes deux arcs est à 0/20.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819540",
+                "check": ""
+        },
+        {
+                "name": "Arc tempétueux",
+                "category": "Arc",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ×3",
+                "rank": "C",
+                "power": "9",
+                "accuracy": "80",
+                "weight": "5",
+                "range": "2",
+                "observedCountCai": "3",
+                "capture": "3e nouvelle capture",
+                "price": "",
+                "effect": "Esquive +10 lorsque l'arc est équipé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819540",
+                "check": ""
+        },
+        {
+                "name": "Arc venin",
+                "category": "Arc",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ; 15/20",
+                "rank": "D",
+                "power": "3",
+                "accuracy": "75",
+                "weight": "4",
+                "range": "2",
+                "observedCountCai": "2",
+                "capture": "3e nouvelle capture",
+                "price": "",
+                "effect": "Chaque attaque qui touche inflige l'état Poison.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819540",
+                "check": ""
+        },
+        {
+                "name": "Bâton de l'ordre",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "3",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "5e nouvelle capture",
+                "price": "",
+                "effect": "Probable correspondance avec le bâton de l'ordre monastique (修道会の杖) : Magie +1, Résistance +3 ; poids +3.",
+                "status": "Correspondance probable",
+                "source": "https://gamewith.jp/fefw/574252",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Bâton de soin",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée ×2",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "3",
+                "range": "",
+                "observedCountCai": "2",
+                "capture": "5e nouvelle capture",
+                "price": "",
+                "effect": "Lorsque l'unité soigne un allié par magie : quantité de PV rendue +10 ; poids +3.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/817533",
+                "check": ""
+        },
+        {
+                "name": "Beginner License",
+                "category": "Objet d’examen",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "",
+                "price": "300 G",
+                "effect": "Nécessaire pour passer un examen de classe débutante.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Black-Magic Manual",
+                "category": "Manuel",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "1000 G",
+                "effect": "Augmente légèrement la compétence de magie noire.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Breidablik",
+                "category": "Gantelets",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20",
+                "rank": "E",
+                "power": "",
+                "accuracy": "",
+                "weight": "",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "4e nouvelle capture",
+                "price": "",
+                "effect": "Dégâts magiques, portée 1–2 ; facilite le gain de soutien. Art « Lumière des liens » : coût 5, Puissance magique +2 et +2 supplémentaire par allié adjacent. La base japonaise indique 30 utilisations max, ta capture 20/20.",
+                "status": "Sources discordantes",
+                "source": "https://game8.jp/fe-banshisenko/819466",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Breuvage",
+                "category": "Consommable",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "2/2 ×11",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "",
+                "range": "",
+                "observedCountCai": "11",
+                "capture": "8e nouvelle capture",
+                "price": "",
+                "effect": "Rend 40 PV à l'utilisateur ; chaque exemplaire contient 2 charges (2/2 sur tes captures).",
+                "status": "Vérifié",
+                "source": "https://gamewith.jp/fefw/574296",
+                "check": ""
+        },
+        {
+                "name": "Bullion",
+                "category": "Ressource",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "",
+                "price": "",
+                "effect": "Ressource / objet de valeur ; usage précis à compléter en français.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR et usage exact à confirmer"
+        },
+        {
+                "name": "Carna Bonito",
+                "category": "Poisson / ingrédient",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "",
+                "price": "",
+                "effect": "Ingrédient classé parmi les poissons à saveur sucrée.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Chest Key",
+                "category": "Clé",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "",
+                "price": "",
+                "effect": "Permet d’ouvrir un coffre verrouillé.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Écu anti-mage",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "4",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "5e nouvelle capture",
+                "price": "",
+                "effect": "Défense +1 et Résistance +5 ; poids +4.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/817533",
+                "check": ""
+        },
+        {
+                "name": "Écu en fer",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "4",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "5e nouvelle capture",
+                "price": "",
+                "effect": "Défense +3 ; poids +4.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/817533",
+                "check": ""
+        },
+        {
+                "name": "Écu talisman",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "3",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "5e nouvelle capture",
+                "price": "",
+                "effect": "Défense +1 et Résistance +2 ; poids +3.",
+                "status": "Vérifié",
+                "source": "https://gamewith.jp/fefw/574252",
+                "check": ""
+        },
+        {
+                "name": "Épée d'élu",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "9/20",
+                "rank": "E",
+                "power": "6",
+                "accuracy": "90",
+                "weight": "5",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "3",
+                "price": "",
+                "effect": "Arme de collaboration : Défense +1 aux alliés adjacents ; fiche GameWith : puissance 6.",
+                "status": "Vérifié",
+                "source": "https://gamewith.jp/fefw/578714",
+                "check": ""
+        },
+        {
+                "name": "Épée Da Mina",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "16/25",
+                "rank": "C",
+                "power": "12",
+                "accuracy": "90",
+                "weight": "4",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "2",
+                "price": "",
+                "effect": "Lorsqu'un Art de combat est utilisé avec elle : précision +10.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": ""
+        },
+        {
+                "name": "Épée en bois",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "10/10 ; 6/10",
+                "rank": "E",
+                "power": "2",
+                "accuracy": "90",
+                "weight": "2",
+                "range": "1",
+                "observedCountCai": "2",
+                "capture": "1",
+                "price": "",
+                "effect": "Épée standard ; aucun effet passif spécial recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": ""
+        },
+        {
+                "name": "Épée en bronze",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "15/15 ×2",
+                "rank": "E",
+                "power": "4",
+                "accuracy": "90",
+                "weight": "3",
+                "range": "1",
+                "observedCountCai": "2",
+                "capture": "1",
+                "price": "",
+                "effect": "Épée standard ; aucun effet passif spécial recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": ""
+        },
+        {
+                "name": "Épée en fer",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ×5 ; 18/20",
+                "rank": "D",
+                "power": "9",
+                "accuracy": "90",
+                "weight": "4",
+                "range": "1",
+                "observedCountCai": "6",
+                "capture": "1",
+                "price": "",
+                "effect": "Épée standard ; aucun effet passif spécial recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": ""
+        },
+        {
+                "name": "Épée en fer +1",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20",
+                "rank": "D",
+                "power": "",
+                "accuracy": "",
+                "weight": "",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "1",
+                "price": "",
+                "effect": "Variante améliorée de l'épée en fer ; valeur exacte après forge non relevée.",
+                "status": "À confirmer",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Épée orage",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ; 10/20",
+                "rank": "C",
+                "power": "12",
+                "accuracy": "70",
+                "weight": "8",
+                "range": "1–2",
+                "observedCountCai": "2",
+                "capture": "2",
+                "price": "",
+                "effect": "Inflige des dégâts magiques, portée 1–2 ; Art de foudre associé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": ""
+        },
+        {
+                "name": "Épée royale",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "1/10",
+                "rank": "E",
+                "power": "5",
+                "accuracy": "90",
+                "weight": "4",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "3",
+                "price": "",
+                "effect": "Arme de collaboration : donne accès à l'Art magique de zone « Nonafire EX ». GameWith : puissance 5, 10 utilisations max (comme ta capture) ; Game8 affiche une autre version chiffrée.",
+                "status": "Sources discordantes",
+                "source": "https://gamewith.jp/fefw/578715",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Épieu",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "25/25",
+                "rank": "B",
+                "power": "11",
+                "accuracy": "70",
+                "weight": "12",
+                "range": "1–2",
+                "observedCountCai": "1",
+                "capture": "4",
+                "price": "",
+                "effect": "Lance de jet à portée 1–2 ; un propriétaire est affiché dans ton inventaire.",
+                "status": "Correspondance probable",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Fer létal",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "32/40",
+                "rank": "C",
+                "power": "11",
+                "accuracy": "90",
+                "weight": "6",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "2",
+                "price": "",
+                "effect": "Donne accès à un Art de combat axé coup critique ; pas de bonus de critique passif à supposer.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": ""
+        },
+        {
+                "name": "Flagelleur curatif",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "8",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "6e nouvelle capture",
+                "price": "",
+                "effect": "Probablement « Langue de félicité » : objet maudit, restaure une quantité moyenne de PV lorsque l'unité achève un ennemi ; poids +8, Malédiction +1.",
+                "status": "Correspondance probable",
+                "source": "https://game8.jp/fe-banshisenko/817533",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Flissa",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ; 8/20",
+                "rank": "C",
+                "power": "10",
+                "accuracy": "90",
+                "weight": "4",
+                "range": "1",
+                "observedCountCai": "2",
+                "capture": "2",
+                "price": "",
+                "effect": "Épée spécialisée à effet de perforation selon la correspondance anglaise ; détail de l'Art à confirmer.",
+                "status": "Correspondance probable",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Flying Manual",
+                "category": "Manuel",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "1000 G",
+                "effect": "Augmente légèrement la compétence de vol.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Gantelets en bois",
+                "category": "Gantelets",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "10/10",
+                "rank": "E",
+                "power": "2",
+                "accuracy": "90",
+                "weight": "1",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "4e nouvelle capture",
+                "price": "",
+                "effect": "Gantelets standard ; pas de passif particulier recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819541",
+                "check": ""
+        },
+        {
+                "name": "Gantelets en bronze",
+                "category": "Gantelets",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "15/15 ; 13/15",
+                "rank": "E",
+                "power": "3",
+                "accuracy": "90",
+                "weight": "2",
+                "range": "1",
+                "observedCountCai": "2",
+                "capture": "4e nouvelle capture",
+                "price": "",
+                "effect": "Gantelets standard ; pas de passif particulier recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819541",
+                "check": ""
+        },
+        {
+                "name": "Gantelets en fer",
+                "category": "Gantelets",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ×2",
+                "rank": "D",
+                "power": "8",
+                "accuracy": "90",
+                "weight": "3",
+                "range": "1",
+                "observedCountCai": "2",
+                "capture": "4e nouvelle capture",
+                "price": "",
+                "effect": "Gantelets standard ; pas de passif particulier recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819541",
+                "check": ""
+        },
+        {
+                "name": "Gantelets solides",
+                "category": "Gantelets",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20",
+                "rank": "C",
+                "power": "12",
+                "accuracy": "80",
+                "weight": "5",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "4e nouvelle capture",
+                "price": "",
+                "effect": "Gantelets renforcés contre la magie : Résistance +3.",
+                "status": "Correspondance probable",
+                "source": "https://game8.jp/fe-banshisenko/819541",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Gemme frénésie",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "5e nouvelle capture",
+                "price": "",
+                "effect": "Effet exact NON IDENTIFIÉ avec certitude : traduction française à relier à une fiche japonaise ou anglaise ; capture « Détails » souhaitée.",
+                "status": "À confirmer",
+                "source": "https://game8.jp/fe-banshisenko/817533",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Gemme miracle",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "5",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "5e nouvelle capture",
+                "price": "",
+                "effect": "En subissant une attaque : 3 % de chances d'annuler entièrement les dégâts ; poids +5.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/817533",
+                "check": ""
+        },
+        {
+                "name": "Gemme naturelle",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "5e nouvelle capture",
+                "price": "",
+                "effect": "Effet exact NON IDENTIFIÉ avec certitude : ne pas confondre arbitrairement avec la gemme de vent japonaise.",
+                "status": "À confirmer",
+                "source": "https://game8.jp/fe-banshisenko/817533",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Gift Box",
+                "category": "Boîte",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "150 G",
+                "effect": "À l’ouverture, donne aléatoirement un cadeau.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Gold Dust",
+                "category": "Ressource",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais provisoire · Nom FR à confirmer",
+                "durability": "",
+                "price": "",
+                "effect": "Ressource / objet de valeur ; usage précis à compléter en français.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR et usage exact à confirmer"
+        },
+        {
+                "name": "Gold Trout",
+                "category": "Poisson / ingrédient",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais provisoire · Nom FR à confirmer",
+                "durability": "",
+                "price": "Valeur de vente relevée : 500 G",
+                "effect": "Ingrédient classé parmi les poissons à saveur sucrée.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Hache courte",
+                "category": "Hache",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "25/25 ×2",
+                "rank": "C",
+                "power": "9",
+                "accuracy": "60",
+                "weight": "12",
+                "range": "1–2",
+                "observedCountCai": "2",
+                "capture": "1re nouvelle capture",
+                "price": "",
+                "effect": "Hache de jet plus puissante : portée 1–2.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819539",
+                "check": ""
+        },
+        {
+                "name": "Hache Da Mina",
+                "category": "Hache",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "28/30",
+                "rank": "C",
+                "power": "16",
+                "accuracy": "65",
+                "weight": "10",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "1re nouvelle capture",
+                "price": "",
+                "effect": "Précision +10 lors d'une attaque utilisant un Art de combat.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819539",
+                "check": ""
+        },
+        {
+                "name": "Hache en bois",
+                "category": "Hache",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "15/15 ×4",
+                "rank": "E",
+                "power": "5",
+                "accuracy": "70",
+                "weight": "7",
+                "range": "1",
+                "observedCountCai": "4",
+                "capture": "5",
+                "price": "",
+                "effect": "Hache standard ; aucun effet passif spécial recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819539",
+                "check": ""
+        },
+        {
+                "name": "Hache en fer",
+                "category": "Hache",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "25/25 ×5",
+                "rank": "D",
+                "power": "13",
+                "accuracy": "65",
+                "weight": "10",
+                "range": "1",
+                "observedCountCai": "5",
+                "capture": "5",
+                "price": "",
+                "effect": "Hache standard ; aucun effet passif spécial recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819539",
+                "check": ""
+        },
+        {
+                "name": "Hache écrasante",
+                "category": "Hache",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "25/25",
+                "rank": "C",
+                "power": "14",
+                "accuracy": "65",
+                "weight": "10",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "1re nouvelle capture",
+                "price": "",
+                "effect": "Accès à « Coup écrasant » : coût 2 durabilités, puissance +3 ; peut détruire les obstacles.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/817286",
+                "check": ""
+        },
+        {
+                "name": "Hachette",
+                "category": "Hache",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "25/25 ×2",
+                "rank": "D",
+                "power": "5",
+                "accuracy": "65",
+                "weight": "10",
+                "range": "1–2",
+                "observedCountCai": "2",
+                "capture": "1re nouvelle capture",
+                "price": "",
+                "effect": "Hache de jet : portée 1–2.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819539",
+                "check": ""
+        },
+        {
+                "name": "Hallebarde",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "25/25",
+                "rank": "Double rang",
+                "power": "",
+                "accuracy": "",
+                "weight": "",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "4",
+                "price": "",
+                "effect": "Arme à double condition de maîtrise (lance D + hache D selon la base japonaise) ; pas de passif recensé.",
+                "status": "Correspondance probable",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Heavy-Armor Manual",
+                "category": "Manuel",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "1000 G",
+                "effect": "Augmente légèrement la compétence d’armure lourde.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Javelot",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ×3",
+                "rank": "D",
+                "power": "3",
+                "accuracy": "80",
+                "weight": "8",
+                "range": "1–2",
+                "observedCountCai": "3",
+                "capture": "4",
+                "price": "",
+                "effect": "Lance de jet, attaque à portée 1–2 ; pas de passif supplémentaire recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": ""
+        },
+        {
+                "name": "Javelot +1",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "16/20",
+                "rank": "D",
+                "power": "",
+                "accuracy": "",
+                "weight": "",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "4",
+                "price": "",
+                "effect": "Variante améliorée du javelot, portée 1–2 probable ; chiffres précis +1 à vérifier.",
+                "status": "À confirmer",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Lame ouragan",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ×2",
+                "rank": "C",
+                "power": "8",
+                "accuracy": "90",
+                "weight": "2",
+                "range": "1",
+                "observedCountCai": "2",
+                "capture": "2",
+                "price": "",
+                "effect": "Esquive +10 lorsque cette arme est équipée.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": ""
+        },
+        {
+                "name": "Lame purificatrice",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "11/20",
+                "rank": "E",
+                "power": "8",
+                "accuracy": "90",
+                "weight": "3",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "2",
+                "price": "",
+                "effect": "Neutralise la bénédiction des Enfers de l'ennemi pendant le combat.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": ""
+        },
+        {
+                "name": "Lance d'Assal",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20",
+                "rank": "D",
+                "power": "7",
+                "accuracy": "85",
+                "weight": "8",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "4–5",
+                "price": "",
+                "effect": "Art sacré : si l'attaque achève l'ennemi, le porteur récupère une quantité moyenne de PV.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": ""
+        },
+        {
+                "name": "Lance d'élue",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20",
+                "rank": "E",
+                "power": "",
+                "accuracy": "",
+                "weight": "",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "5",
+                "price": "",
+                "effect": "Correspond probablement à la Lance glacée du salut (Fjorm) : Esquive +10. Attention : la durabilité relevée varie selon les bases ; conserver tes 20/20.",
+                "status": "Correspondance probable",
+                "source": "https://gamewith.jp/fefw/578714",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Lance Da Mina",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "23/25",
+                "rank": "C",
+                "power": "13",
+                "accuracy": "80",
+                "weight": "7",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "4",
+                "price": "",
+                "effect": "Précision +10 pendant l'utilisation d'un Art de combat.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": ""
+        },
+        {
+                "name": "Lance en bois",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "10/10 ×3",
+                "rank": "E",
+                "power": "3",
+                "accuracy": "90",
+                "weight": "5",
+                "range": "1",
+                "observedCountCai": "3",
+                "capture": "3",
+                "price": "",
+                "effect": "Lance standard ; aucun effet passif spécial recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": ""
+        },
+        {
+                "name": "Lance en bronze",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "15/15 ×2",
+                "rank": "E",
+                "power": "5",
+                "accuracy": "90",
+                "weight": "7",
+                "range": "1",
+                "observedCountCai": "2",
+                "capture": "3",
+                "price": "",
+                "effect": "Lance standard ; aucun effet passif spécial recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": ""
+        },
+        {
+                "name": "Lance en fer",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ×3",
+                "rank": "D",
+                "power": "10",
+                "accuracy": "80",
+                "weight": "7",
+                "range": "1",
+                "observedCountCai": "3",
+                "capture": "3",
+                "price": "",
+                "effect": "Lance standard ; aucun effet passif spécial recensé.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": ""
+        },
+        {
+                "name": "Lance en fer +1",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20",
+                "rank": "D",
+                "power": "",
+                "accuracy": "",
+                "weight": "",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "3",
+                "price": "",
+                "effect": "Lance en fer améliorée ; chiffres de la variante +1 à relever en jeu.",
+                "status": "À confirmer",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Lance stellaire",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "25/25",
+                "rank": "C",
+                "power": "16",
+                "accuracy": "85",
+                "weight": "8",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "4",
+                "price": "",
+                "effect": "Art « Éclat stellaire » : attaque magique spéciale à portée 1–2, efficace contre certains ennemis des Enfers ; coût de durabilité élevé.",
+                "status": "Correspondance probable",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Large Gold Dust",
+                "category": "Ressource",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais provisoire · Nom FR à confirmer",
+                "durability": "",
+                "price": "",
+                "effect": "Ressource / objet de valeur ; usage précis à compléter en français.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR et usage exact à confirmer"
+        },
+        {
+                "name": "Manual Crate",
+                "category": "Boîte",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "400 G",
+                "effect": "À l’ouverture, donne aléatoirement un manuel de compétence.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Masque tourmente",
+                "category": "Équipement",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "Non affichée",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "3",
+                "range": "",
+                "observedCountCai": "1",
+                "capture": "5e nouvelle capture",
+                "price": "",
+                "effect": "Objet maudit : dégâts infligés ×1,5 contre les adversaires confus ; poids +3, Malédiction +1.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/817533",
+                "check": ""
+        },
+        {
+                "name": "Massue",
+                "category": "Hache",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ×2",
+                "rank": "E",
+                "power": "3",
+                "accuracy": "90",
+                "weight": "5",
+                "range": "1",
+                "observedCountCai": "2",
+                "capture": "1re nouvelle capture",
+                "price": "",
+                "effect": "Art « Choc magique » : coût 1 durabilité, puissance +1, inflige des dégâts magiques.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/817286",
+                "check": ""
+        },
+        {
+                "name": "Meat Crate",
+                "category": "Boîte",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "100 G",
+                "effect": "À l’ouverture, donne aléatoirement de la viande.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Meltfish",
+                "category": "Poisson / ingrédient",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "",
+                "price": "",
+                "effect": "Ingrédient classé parmi les poissons rares / de goût particulier.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Moonfish",
+                "category": "Poisson / ingrédient",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "",
+                "price": "",
+                "effect": "Ingrédient classé parmi les poissons rares / de goût particulier.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Mystery Box",
+                "category": "Boîte",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais provisoire · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "",
+                "effect": "À l’ouverture, donne aléatoirement un item.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Petit épieu",
+                "category": "Lance",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20 ×2",
+                "rank": "C",
+                "power": "5",
+                "accuracy": "75",
+                "weight": "10",
+                "range": "1–2",
+                "observedCountCai": "2",
+                "capture": "4",
+                "price": "",
+                "effect": "Lance de jet, portée 1–2 ; effet supplémentaire non documenté.",
+                "status": "Correspondance probable",
+                "source": "https://game8.jp/fe-banshisenko/819538",
+                "check": "À vérifier"
+        },
+        {
+                "name": "Potion",
+                "category": "Consommable",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "3/3 ×11",
+                "rank": "—",
+                "power": "",
+                "accuracy": "",
+                "weight": "",
+                "range": "",
+                "observedCountCai": "11",
+                "capture": "7e nouvelle capture",
+                "price": "",
+                "effect": "Rend 20 PV à l'utilisateur ; chaque exemplaire contient 3 charges (3/3 sur tes captures).",
+                "status": "Vérifié",
+                "source": "https://gamewith.jp/fefw/574296",
+                "check": ""
+        },
+        {
+                "name": "Riding Manual",
+                "category": "Manuel",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "1000 G",
+                "effect": "Augmente légèrement la compétence d’équitation.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Ring Box",
+                "category": "Boîte",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais provisoire · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "2000 G",
+                "effect": "À l’ouverture, donne aléatoirement un anneau.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Roues du cosmos",
+                "category": "Gantelets",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "20/20",
+                "rank": "Épée D + poings C",
+                "power": "10",
+                "accuracy": "70",
+                "weight": "4",
+                "range": "1–2",
+                "observedCountCai": "1",
+                "capture": "4e nouvelle capture",
+                "price": "",
+                "effect": "Gantelets circulaires de jet, portée 1–2 ; exige épée D et poings C selon la fiche japonaise.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819541",
+                "check": ""
+        },
+        {
+                "name": "Salamandre",
+                "category": "Gantelets",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "3/3",
+                "rank": "E",
+                "power": "2",
+                "accuracy": "80",
+                "weight": "3",
+                "range": "1–2",
+                "observedCountCai": "1",
+                "capture": "4e nouvelle capture",
+                "price": "",
+                "effect": "Arme à dégâts magiques, portée 1–2 ; possède l'Art spécial « Projectile de lumière surcomprimée ».",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819541",
+                "check": ""
+        },
+        {
+                "name": "Tactics Manual",
+                "category": "Manuel",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "1000 G",
+                "effect": "Augmente légèrement la compétence de commandement.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Tefunomi",
+                "category": "Légume / ingrédient",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais provisoire · Nom FR à confirmer",
+                "durability": "",
+                "price": "Valeur de vente relevée : 30 G",
+                "effect": "Ingrédient classé parmi les légumes à saveur sucrée.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Usamos",
+                "category": "Poisson / ingrédient",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "",
+                "price": "",
+                "effect": "Ingrédient classé parmi les poissons à saveur épicée.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Velheit",
+                "category": "Hache",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "25/25",
+                "rank": "A",
+                "power": "13",
+                "accuracy": "95",
+                "weight": "5",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "1re nouvelle capture",
+                "price": "",
+                "effect": "Hache maudite, rang A. Art « Pas de tempête » : coût 3, puissance +5 et précision +20 ; si la cible est vaincue, vitesse d'attaque +10 jusqu'à la prochaine phase du porteur.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819482",
+                "check": ""
+        },
+        {
+                "name": "Veroquine",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "30/30",
+                "rank": "B + icône C",
+                "power": "13",
+                "accuracy": "60",
+                "weight": "12",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "2",
+                "price": "",
+                "effect": "Épée maudite, exige Épée B + Hache C. Art « Prune / 絶花 » : coût 10, Puissance +15, précision +20 ; chance dépendant de Technique de ne pas réduire la durabilité.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/817286",
+                "check": ""
+        },
+        {
+                "name": "White-Magic Manual",
+                "category": "Manuel",
+                "nameLanguage": "Anglais",
+                "nameStatus": "Nom anglais vérifié · Nom FR à confirmer",
+                "durability": "1 utilisation",
+                "price": "1000 G",
+                "effect": "Augmente légèrement la compétence de magie blanche.",
+                "status": "Vérifié web",
+                "source": "Nom anglais vérifié ou nom anglais de travail, recoupé avec les guides disponibles",
+                "check": "Nom FR à confirmer"
+        },
+        {
+                "name": "Zambato",
+                "category": "Épée",
+                "nameLanguage": "Français",
+                "nameStatus": "Nom FR exact relevé dans l’inventaire de Cai",
+                "durability": "18/20",
+                "rank": "D",
+                "power": "14",
+                "accuracy": "80",
+                "weight": "7",
+                "range": "1",
+                "observedCountCai": "1",
+                "capture": "2",
+                "price": "",
+                "effect": "Arme efficace contre les unités montées/cavalerie.",
+                "status": "Vérifié",
+                "source": "https://game8.jp/fe-banshisenko/819537",
+                "check": ""
+        }
+];
+
+      let currentHero = "Cai";
+
+      const el = {
+        welcome: document.getElementById("welcome"),
+        inventoryView: document.getElementById("inventoryView"),
+        currentHeroName: document.getElementById("currentHeroName"),
+        inventoryList: document.getElementById("inventoryList"),
+        catalogList: document.getElementById("catalogList"),
+        inventorySearch: document.getElementById("inventorySearch"),
+        catalogSearch: document.getElementById("catalogSearch"),
+        addCatalogItemForm: document.getElementById("addCatalogItemForm"),
+        newCatalogItem: document.getElementById("newCatalogItem"),
+        distinctCount: document.getElementById("distinctCount"),
+        copyCount: document.getElementById("copyCount"),
+        catalogCount: document.getElementById("catalogCount"),
+        clearHeroInventory: document.getElementById("clearHeroInventory"),
+        restoreCaiInventory: document.getElementById("restoreCaiInventory"),
+        clearInventoryModal: document.getElementById("clearInventoryModal"),
+        clearInventoryModalText: document.getElementById("clearInventoryModalText"),
+        clearInventoryModalClose: document.getElementById("clearInventoryModalClose"),
+        clearInventoryModalCancel: document.getElementById("clearInventoryModalCancel"),
+        clearInventoryModalConfirm: document.getElementById("clearInventoryModalConfirm"),
+        effectModal: document.getElementById("effectModal"),
+        effectModalTitle: document.getElementById("effectModalTitle"),
+        effectModalText: document.getElementById("effectModalText"),
+        effectModalClose: document.getElementById("effectModalClose"),
+        effectModalCancel: document.getElementById("effectModalCancel"),
+        effectModalSave: document.getElementById("effectModalSave"),
+        paralogueView: document.getElementById("paralogueView"),
+        paralogueHeroName: document.getElementById("paralogueHeroName"),
+        paralogueSummary: document.getElementById("paralogueSummary"),
+        paralogueList: document.getElementById("paralogueList"),
+        characterView: document.getElementById("characterView"),
+        characterLink: document.getElementById("characterLink"),
+        currentCharacterName: document.getElementById("currentCharacterName"),
+        characterName: document.getElementById("characterName"),
+        characterScreenInput: document.getElementById("characterScreenInput"),
+        characterScreenImage: document.getElementById("characterScreenImage"),
+        characterScreenPlaceholder: document.getElementById("characterScreenPlaceholder"),
+        characterClass: document.getElementById("characterClass"),
+        characterRoute: document.getElementById("characterRoute"),
+        characterBuildSlots: document.getElementById("characterBuildSlots"),
+        characterItemSearch: document.getElementById("characterItemSearch"),
+        characterItemsList: document.getElementById("characterItemsList")
+      };
+
+      let editingEffectItemName = null;
+      const sortFR = (a,b) => a.localeCompare(b,"fr",{sensitivity:"base"});
+
+      function cleanName(value){
+        return String(value || "").replace(/\s+/g," ").trim();
+      }
+
+      function loadJSON(key, fallback){
+        try{
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        }catch{
+          return fallback;
+        }
+      }
+
+      function saveJSON(key, value){
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+
+      function migrateItemName(name){
+        const clean = cleanName(name);
+        const migration = ITEM_NAME_MIGRATIONS[clean];
+        return migration ? migration : {name:clean, verified:null};
+      }
+
+      function normalizeCatalogItem(item){
+        if(typeof item === "string"){
+          const migrated = migrateItemName(item);
+          return {
+            name:migrated.name, category:"À classer",
+            nameLanguage:migrated.verified === null ? "À préciser" : "Anglais",
+            nameStatus:migrated.verified === true ? "Nom anglais vérifié · Nom FR à confirmer" : (migrated.verified === false ? "Nom anglais provisoire · Nom FR à confirmer" : "Nom / langue à confirmer"),
+            durability:"", rank:"", power:"", accuracy:"", weight:"", range:"", observedCountCai:"", capture:"", price:"",
+            effect:"Effet à renseigner.", status:"À confirmer", source:"Ajout manuel", check:"À vérifier"
+          };
+        }
+
+        const migrated = migrateItemName(item?.name);
+        const wasMigrated = migrated.name !== cleanName(item?.name);
+        return {
+          name:migrated.name,
+          category:cleanName(item?.category) || "À classer",
+          nameLanguage:wasMigrated ? "Anglais" : (cleanName(item?.nameLanguage) || "À préciser"),
+          nameStatus:wasMigrated
+            ? (migrated.verified ? "Nom anglais vérifié · Nom FR à confirmer" : "Nom anglais provisoire · Nom FR à confirmer")
+            : (cleanName(item?.nameStatus) || "Nom / langue à confirmer"),
+          durability:cleanName(item?.durability),
+          rank:cleanName(item?.rank),
+          power:cleanName(item?.power),
+          accuracy:cleanName(item?.accuracy),
+          weight:cleanName(item?.weight),
+          range:cleanName(item?.range),
+          observedCountCai:cleanName(item?.observedCountCai),
+          capture:cleanName(item?.capture),
+          price:cleanName(item?.price),
+          effect:cleanName(item?.effect) || "Effet à renseigner.",
+          status:cleanName(item?.status) || "À confirmer",
+          source:cleanName(item?.source) || "Source à renseigner",
+          check:cleanName(item?.check)
+        };
+      }
+
+      function mergeDefaultsAndSaved(savedItems){
+        const map = new Map();
+
+        defaultCatalog.forEach(raw => {
+          const item = normalizeCatalogItem(raw);
+          map.set(item.name.toLocaleLowerCase("fr"), item);
+        });
+
+        (savedItems || []).forEach(raw => {
+          const saved = normalizeCatalogItem(raw);
+          if(!saved.name) return;
+          const key = saved.name.toLocaleLowerCase("fr");
+          const base = map.get(key);
+          if(!base){
+            map.set(key, saved);
+          }else if(saved.status === "Modifié manuellement"){
+            map.set(key, {...base, effect:saved.effect || base.effect, status:"Modifié manuellement"});
+          }else{
+            map.set(key, base);
+          }
+        });
+
+        return [...map.values()].sort((a,b) => sortFR(a.name,b.name));
+      }
+
+      function getLegacyCatalog(){
+        const v3 = loadJSON(CATALOG_KEY_V3, null);
+        if(Array.isArray(v3) && v3.length) return v3;
+        const v2 = loadJSON(CATALOG_KEY_V2, null);
+        if(Array.isArray(v2) && v2.length) return v2;
+        const v1 = loadJSON(CATALOG_KEY_V1, null);
+        if(Array.isArray(v1) && v1.length) return v1;
+        return [];
+      }
+
+      function getCatalog(){
+        const saved = loadJSON(CATALOG_KEY, null);
+        const merged = mergeDefaultsAndSaved(Array.isArray(saved) ? saved : getLegacyCatalog());
+        saveJSON(CATALOG_KEY, merged);
+        return merged;
+      }
+
+      function saveCatalog(catalog){
+        saveJSON(CATALOG_KEY, mergeDefaultsAndSaved(catalog));
+      }
+
+      function findCatalogItem(name){
+        const clean = cleanName(name);
+        return getCatalog().find(item => item.name.localeCompare(clean,"fr",{sensitivity:"base"}) === 0) || null;
+      }
+
+      function getInventory(hero){
+        const storageKey = HERO_KEY(hero);
+        const saved = loadJSON(storageKey, {});
+        const result = {};
+        Object.entries(saved || {}).forEach(([name, qty]) => {
+          const clean = migrateItemName(name).name;
+          const n = Number(qty);
+          if(clean && Number.isFinite(n) && n > 0) result[clean] = (result[clean] || 0) + Math.floor(n);
+        });
+        return result;
+      }
+
+      function setInventory(hero, inventory){ saveJSON(HERO_KEY(hero), inventory); }
+
+      function esc(value){
+        return String(value ?? "")
+          .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+          .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+      }
+
+      function showHeroInventory(hero){
+        if(!heroes.includes(hero)) return;
+        currentHero = hero;
+        el.currentHeroName.textContent = hero;
+        el.restoreCaiInventory.style.display = hero === "Cai" ? "inline-block" : "none";
+        el.welcome.style.display = "none";
+        el.paralogueView.classList.remove("active");
+        el.characterView.classList.remove("active");
+        el.inventoryView.classList.add("active");
+        renderAll();
+      }
+
+      function renderParalogues(hero){
+        const entries = PARALOGUE_DATA[hero] || [];
+        el.paralogueHeroName.textContent = hero;
+        el.paralogueSummary.innerHTML = `
+          <span class="chip">${entries.length} paralogue${entries.length > 1 ? "s" : ""} disponible${entries.length > 1 ? "s" : ""}</span>
+          <span class="chip">Partie I uniquement</span>
+          <span class="chip">Dates = calendrier du jeu</span>`;
+
+        el.paralogueList.innerHTML = entries.map(entry => `
+          <article class="paralogue-card">
+            <div class="paralogue-card-head">
+              <div>
+                <div class="paralogue-owner">${esc(entry.owner)}</div>
+                <div class="paralogue-name">${esc(entry.title)} <span style="color:#777782">(titre anglais)</span></div>
+              </div>
+              <span class="paralogue-chapter">${esc(entry.chapter)}</span>
+            </div>
+
+            <div class="paralogue-dates">
+              <div class="date-box">
+                <span class="date-label">Fenêtre d’acceptation</span>
+                <span class="date-value">${esc(entry.accept)}</span>
+              </div>
+              <div class="date-box">
+                <span class="date-label">Échéance</span>
+                <span class="date-value">${esc(entry.deadline)}</span>
+              </div>
+            </div>
+
+            <div class="paralogue-row">
+              <span class="paralogue-row-label">Où l’obtenir</span>
+              <span class="paralogue-row-value">${esc(entry.location)}</span>
+            </div>
+            <div class="paralogue-row">
+              <span class="paralogue-row-label">Vérification</span>
+              <span class="paralogue-row-value">${esc(entry.note)}</span>
+            </div>
+            ${entry.warning ? `<div class="paralogue-warning">⚠ Cette entrée comporte une différence entre les guides anglophones. La page conserve le détail au lieu de choisir arbitrairement une date.</div>` : ""}
+          </article>`).join("");
+      }
+
+      function showHeroParalogues(hero){
+        if(!heroes.includes(hero)) return;
+        currentHero = hero;
+        el.welcome.style.display = "none";
+        el.inventoryView.classList.remove("active");
+        el.characterView.classList.remove("active");
+        el.paralogueView.classList.add("active");
+        renderParalogues(hero);
+      }
+
+      function renderStats(){
+        const inv = getInventory(currentHero);
+        const distinct = Object.keys(inv).length;
+        const copies = Object.values(inv).reduce((sum,n) => sum + Number(n), 0);
+        const catalog = getCatalog();
+        el.distinctCount.textContent = `${distinct} item${distinct > 1 ? "s" : ""} différent${distinct > 1 ? "s" : ""}`;
+        el.copyCount.textContent = `${copies} exemplaire${copies > 1 ? "s" : ""}`;
+        el.catalogCount.textContent = `${catalog.length} item${catalog.length > 1 ? "s" : ""} du jeu`;
+      }
+
+      function languageBadge(item){
+        const warning = item.nameStatus.toLocaleLowerCase("fr").includes("confirmer");
+        return `<span class="name-status${warning ? " warning" : ""}">${esc(item.nameLanguage)} · ${esc(item.nameStatus)}</span>`;
+      }
+
+      function detailRows(item){
+        const rows = [];
+        if(item.category) rows.push(["Catégorie", item.category]);
+        if(item.rank) rows.push(["Rang", item.rank]);
+        if(item.power) rows.push(["Puissance", item.power]);
+        if(item.accuracy) rows.push(["Précision", item.accuracy]);
+        if(item.weight) rows.push(["Poids", item.weight]);
+        if(item.range) rows.push(["Portée", item.range]);
+        if(item.durability) rows.push(["Durabilité / charges relevées", item.durability]);
+        if(item.observedCountCai) rows.push(["Stock relevé chez Cai", item.observedCountCai]);
+        if(item.capture) rows.push(["Capture de référence", item.capture]);
+        if(item.price) rows.push(["Prix / valeur relevé", item.price]);
+        if(item.source) rows.push(["Source", item.source]);
+        if(item.check) rows.push(["À vérifier", item.check]);
+        if(!rows.length) return "";
+        return `<div class="item-info-grid">${rows.map(([label,value]) => `
+          <div class="item-info-row">
+            <span class="item-info-label">${esc(label)}</span>
+            <span class="item-info-value">${esc(value)}</span>
+          </div>`).join("")}</div>`;
+      }
+
+      function renderInventory(){
+        const q = cleanName(el.inventorySearch.value).toLocaleLowerCase("fr");
+        const inv = getInventory(currentHero);
+        const entries = Object.entries(inv).sort((a,b) => sortFR(a[0],b[0]))
+          .filter(([name]) => !q || name.toLocaleLowerCase("fr").includes(q));
+
+        if(!entries.length){
+          el.inventoryList.innerHTML = `<div class="empty">${q ? "Aucun item ne correspond à cette recherche." : `L’inventaire de ${esc(currentHero)} est vide.<br>Clique sur le bouton + d’un item à droite pour l’ajouter.`}</div>`;
+          return;
+        }
+
+        el.inventoryList.innerHTML = entries.map(([name,qty]) => {
+          const item = findCatalogItem(name) || normalizeCatalogItem({name});
+          return `<article class="inventory-card">
+            <div>
+              <div class="item-title-line"><div class="inventory-name">${esc(name)}</div><span class="category-badge">${esc(item.category)}</span></div>
+              <span class="inventory-effect"><strong>Effet :</strong> ${esc(item.effect)}</span>
+              <div class="item-badges">${languageBadge(item)}<span class="effect-status">${esc(item.status)}</span></div>
+            </div>
+            <div class="inventory-actions">
+              <span class="qty">x${qty}</span>
+              <button class="small-btn" type="button" data-action="add" data-name="${esc(name)}" title="Ajouter 1 exemplaire">+1</button>
+              <button class="small-btn" type="button" data-action="minus" data-name="${esc(name)}" title="Retirer 1 exemplaire">-1</button>
+              <button class="small-btn" type="button" data-action="remove" data-name="${esc(name)}">Retirer</button>
+            </div>
+          </article>`;
+        }).join("");
+      }
+
+      function renderCatalog(){
+        const q = cleanName(el.catalogSearch.value).toLocaleLowerCase("fr");
+        const catalog = getCatalog().filter(item => {
+          if(!q) return true;
+          return [item.name,item.category,item.nameLanguage,item.nameStatus,item.effect,item.status,item.source,item.check,item.price,
+                  item.rank,item.power,item.accuracy,item.weight,item.range,item.durability,item.observedCountCai,item.capture]
+            .join(" ").toLocaleLowerCase("fr").includes(q);
+        });
+
+        if(!catalog.length){
+          el.catalogList.innerHTML = `<div class="empty">Aucun item du jeu ne correspond à cette recherche.</div>`;
+          return;
+        }
+
+        el.catalogList.innerHTML = catalog.map(item => `<article class="catalog-item">
+          <div class="catalog-main">
+            <div class="item-title-line"><span class="catalog-item-name">${esc(item.name)}</span><span class="category-badge">${esc(item.category)}</span></div>
+            <div class="item-badges">${languageBadge(item)}<span class="effect-status">${esc(item.status)}</span></div>
+            <span class="catalog-effect"><strong>Effet :</strong> ${esc(item.effect)}</span>
+            ${detailRows(item)}
+            <span class="catalog-item-hint">Le bouton + ajoute uniquement 1 exemplaire à l’inventaire de ${esc(currentHero)}.</span>
+          </div>
+          <div class="catalog-side">
+            <button class="plus" type="button" data-action="add" data-name="${esc(item.name)}" title="Ajouter 1 exemplaire à ${esc(currentHero)}">+</button>
+            <button class="edit-effect-btn" type="button" data-action="edit-effect" data-name="${esc(item.name)}">Modifier l’effet</button>
+          </div>
+        </article>`).join("");
+      }
+
+      function renderAll(){ renderInventory(); renderCatalog(); renderStats(); }
+
+      function addOne(name){
+        const inv = getInventory(currentHero);
+        inv[name] = (inv[name] || 0) + 1;
+        setInventory(currentHero, inv);
+        renderInventory(); renderStats();
+      }
+
+      function minusOne(name){
+        const inv = getInventory(currentHero);
+        if(!inv[name]) return;
+        inv[name] -= 1;
+        if(inv[name] <= 0) delete inv[name];
+        setInventory(currentHero, inv);
+        renderInventory(); renderStats();
+      }
+
+      function removeItem(name){
+        const inv = getInventory(currentHero);
+        delete inv[name];
+        setInventory(currentHero, inv);
+        renderInventory(); renderStats();
+      }
+
+      function editEffect(name){
+        const item = findCatalogItem(name);
+        if(!item) return;
+        editingEffectItemName = item.name;
+        el.effectModalTitle.textContent = `Modifier l’effet — ${item.name}`;
+        el.effectModalText.value = item.effect;
+        el.effectModal.classList.add("open");
+        el.effectModal.setAttribute("aria-hidden","false");
+        setTimeout(() => { el.effectModalText.focus(); el.effectModalText.select(); }, 0);
+      }
+
+      function closeEffectModal(){
+        editingEffectItemName = null;
+        el.effectModal.classList.remove("open");
+        el.effectModal.setAttribute("aria-hidden","true");
+      }
+
+      function saveEffectFromModal(){
+        if(!editingEffectItemName) return;
+        const effect = cleanName(el.effectModalText.value);
+        if(!effect){ el.effectModalText.focus(); return; }
+        const catalog = getCatalog();
+        const item = catalog.find(entry => entry.name.localeCompare(editingEffectItemName,"fr",{sensitivity:"base"}) === 0);
+        if(!item) return;
+        item.effect = effect;
+        item.status = "Modifié manuellement";
+        saveCatalog(catalog);
+        closeEffectModal(); renderCatalog(); renderInventory();
+      }
+
+
+
+      const PLAYABLE_CHARACTERS = [
+        "Eshmel","Hong Hua","Troy",
+        "Cai","Tialla","Peter","Ultand",
+        "Dietrich","Fabio","Esmeralda","Mikaela",
+        "Theodora","Bonaventure","Tobias","Lysander","Lilian",
+        "Leda","Buccar","Sirocco","Mu","Olympia",
+        "Bertrand","Gaitz","Dante","Goliath","Jester",
+        "Talimun","Ursula","Simon","Ludia","Fianna",
+        "Orchel","Diego","Ninae","Seteth","Loretta",
+        "Anatolia","Sha Lan","Nezha","Dadao","Halvin",
+        "Benditz","Alexandra","Zarcone","Jasmine","Kiroc","Inyoni","Peppe",
+        "Guzran","Nydine","Io","Catania","Noctula","Yang Jie","Nuzzuo","Majide",
+        "Sofia","Creek","Nathan","Centurio","Aswan","Tahonia","Klapka"
+      ];
+
+      const CHARACTER_PROFILE_PREFIX = "fw_character_profile_v2_";
+      const LEGACY_CHARACTER_PROFILE_KEY = "fw_character_profile_v1";
+      let currentCharacter = "Cai";
+      let selectedBuildSlot = 0;
+
+      function characterSlug(name){
+        return String(name || "")
+          .toLocaleLowerCase("en")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g,"")
+          .replace(/[^a-z0-9]+/g,"-")
+          .replace(/^-+|-+$/g,"");
+      }
+
+      function characterProfileKey(name){
+        return `${CHARACTER_PROFILE_PREFIX}${name}`;
+      }
+
+      function defaultCharacterProfile(name=currentCharacter){
+        return {
+          name:name,
+          className:"",
+          route:"Cai",
+          stats:{
+            Cai:{part1:"",part2:""},
+            Leda:{part1:"",part2:""},
+            Dietrich:{part1:"",part2:""},
+            Theodora:{part1:"",part2:""}
+          },
+          build:[null,null,null,null,null,null]
+        };
+      }
+
+      function getCharacterProfile(){
+        let saved = loadJSON(characterProfileKey(currentCharacter), null);
+        if(!saved){
+          const legacy = loadJSON(LEGACY_CHARACTER_PROFILE_KEY, null);
+          if(legacy && typeof legacy === "object"){
+            const legacyName = cleanName(legacy.name || "");
+            if(legacyName && legacyName.localeCompare(currentCharacter,"fr",{sensitivity:"base"}) === 0){
+              saved = legacy;
+              saveJSON(characterProfileKey(currentCharacter), legacy);
+            }
+          }
+        }
+        const base = defaultCharacterProfile(currentCharacter);
+        if(!saved || typeof saved !== "object") return base;
+        base.name = cleanName(saved.name || currentCharacter) || currentCharacter;
+        base.className = cleanName(saved.className || "");
+        base.route = heroes.includes(saved.route) ? saved.route : "Cai";
+        heroes.forEach(route => {
+          if(saved.stats && saved.stats[route]){
+            base.stats[route].part1 = String(saved.stats[route].part1 || "");
+            base.stats[route].part2 = String(saved.stats[route].part2 || "");
+          }
+        });
+        if(Array.isArray(saved.build)){
+          base.build = Array.from({length:6},(_,i) => saved.build[i] ? cleanName(saved.build[i]) : null);
+        }
+        return base;
+      }
+
+      function saveCharacterProfile(profile){
+        saveJSON(characterProfileKey(currentCharacter), profile);
+      }
+
+      // Screen du personnage : volontairement minimal.
+      // Pas de sauvegarde, pas d'export : on choisit une image et on l'affiche.
+      const characterScreenMemory = new Map();
+
+      function displayCharacterScreen(imageUrl){
+        if(!imageUrl){
+          el.characterScreenImage.removeAttribute("src");
+          el.characterScreenImage.style.display = "none";
+          el.characterScreenPlaceholder.style.display = "";
+          return;
+        }
+        el.characterScreenImage.src = imageUrl;
+        el.characterScreenImage.style.display = "block";
+        el.characterScreenPlaceholder.style.display = "none";
+      }
+
+      function setCharacterScreen(file){
+        const oldUrl = characterScreenMemory.get(currentCharacter);
+        if(oldUrl) URL.revokeObjectURL(oldUrl);
+
+        const imageUrl = URL.createObjectURL(file);
+        characterScreenMemory.set(currentCharacter,imageUrl);
+        displayCharacterScreen(imageUrl);
+      }
+
+      function clearCharacterScreen(){
+        const oldUrl = characterScreenMemory.get(currentCharacter);
+        if(oldUrl) URL.revokeObjectURL(oldUrl);
+        characterScreenMemory.delete(currentCharacter);
+        el.characterScreenInput.value = "";
+        displayCharacterScreen("");
+      }
+
+      function parseAppHash(){
+        const raw = String(location.hash || "").replace(/^#/,"");
+        return {route:raw.split("?")[0]};
+      }
+
+      function replaceAppHash(route){
+        history.replaceState(null,"",`#${route}`);
+      }
+
+      function populateCharacterForm(){
+        const profile = getCharacterProfile();
+        el.currentCharacterName.textContent = profile.name || currentCharacter;
+        el.characterName.value = profile.name || currentCharacter;
+        if(profile.className && ![...el.characterClass.options].some(option => option.value === profile.className)) {
+          const option = document.createElement("option");
+          option.value = profile.className;
+          option.textContent = `${profile.className} (ancienne valeur)`;
+          el.characterClass.appendChild(option);
+        }
+        el.characterClass.value = profile.className || "";
+        el.characterRoute.value = profile.route;
+        document.querySelectorAll(".route-stat-card").forEach(card => {
+          const route = card.dataset.route;
+          card.querySelectorAll("[data-stat]").forEach(input => {
+            input.value = profile.stats[route]?.[input.dataset.stat] || "";
+          });
+        });
+
+        el.characterScreenInput.value = "";
+        displayCharacterScreen(characterScreenMemory.get(currentCharacter) || "");
+
+        renderCharacterBuild();
+        renderCharacterItems();
+      }
+
+      function showCharacterView(characterName=currentCharacter){
+        if(PLAYABLE_CHARACTERS.includes(characterName)) currentCharacter = characterName;
+        selectedBuildSlot = 0;
+        el.welcome.style.display = "none";
+        el.inventoryView.classList.remove("active");
+        el.paralogueView.classList.remove("active");
+        el.characterView.classList.add("active");
+        populateCharacterForm();
+      }
+
+      function renderCharacterBuild(){
+        const profile = getCharacterProfile();
+        el.characterBuildSlots.innerHTML = profile.build.map((itemName,index) => `
+          <button class="build-slot${selectedBuildSlot === index ? " selected" : ""}" type="button" data-build-slot="${index}">
+            <span>${itemName ? `<span class="build-slot-name">${esc(itemName)}</span>` : `<span class="build-slot-empty">Emplacement ${index+1} — vide</span>`}</span>
+            ${itemName ? `<span class="build-slot-remove" data-remove-build="${index}" title="Retirer">×</span>` : ""}
+          </button>`).join("");
+      }
+
+      function renderCharacterItems(){
+        const q = cleanName(el.characterItemSearch.value).toLocaleLowerCase("fr");
+        const catalog = getCatalog().filter(item => {
+          const hay = `${item.name} ${item.category || ""} ${item.effect || ""}`.toLocaleLowerCase("fr");
+          return !q || hay.includes(q);
+        });
+        if(!catalog.length){
+          el.characterItemsList.innerHTML = '<div class="empty">Aucun item ne correspond à cette recherche.</div>';
+          return;
+        }
+        el.characterItemsList.innerHTML = catalog.map(item => `
+          <button class="character-game-item" type="button" data-character-item="${esc(item.name)}">
+            <strong>${esc(item.name)}</strong>
+            <span>${esc(item.category || "À classer")}${item.effect ? ` · ${esc(item.effect)}` : ""}</span>
+          </button>`).join("");
+      }
+
+      function saveCharacterTextFields(){
+        const profile = getCharacterProfile();
+        profile.name = cleanName(el.characterName.value) || currentCharacter;
+        profile.className = cleanName(el.characterClass.value);
+        profile.route = el.characterRoute.value;
+        document.querySelectorAll(".route-stat-card").forEach(card => {
+          const route = card.dataset.route;
+          card.querySelectorAll("[data-stat]").forEach(input => {
+            profile.stats[route][input.dataset.stat] = input.value;
+          });
+        });
+        saveCharacterProfile(profile);
+        el.currentCharacterName.textContent = profile.name;
+      }
+
+      function placeCharacterItem(itemName){
+        const profile = getCharacterProfile();
+        profile.build[selectedBuildSlot] = itemName;
+        saveCharacterProfile(profile);
+        renderCharacterBuild();
+      }
+
+      function removeCharacterBuildItem(index){
+        const profile = getCharacterProfile();
+        profile.build[index] = null;
+        saveCharacterProfile(profile);
+        renderCharacterBuild();
+      }
+
+      document.querySelectorAll(".inventory-link").forEach(link => {
+        link.addEventListener("click", event => {
+          event.preventDefault();
+          const hero = link.dataset.hero;
+          replaceAppHash(`inventaire-${hero.toLowerCase()}`);
+          showHeroInventory(hero);
+        });
+      });
+
+
+      document.querySelectorAll(".annexe-link").forEach(link => {
+        link.addEventListener("click", event => {
+          event.preventDefault();
+          const hero = link.dataset.hero;
+          replaceAppHash(`annexe-${hero.toLowerCase()}`);
+          showHeroParalogues(hero);
+        });
+      });
+
+
+
+      el.characterLink.addEventListener("click", event => {
+        event.preventDefault();
+        replaceAppHash("personnage");
+        showCharacterView();
+      });
+
+      document.querySelectorAll(".character-roster-item").forEach(link => {
+        link.addEventListener("click", event => {
+          event.preventDefault();
+          const characterName = link.dataset.character;
+          if(!PLAYABLE_CHARACTERS.includes(characterName)) return;
+          replaceAppHash(`personnage-${characterSlug(characterName)}`);
+          showCharacterView(characterName);
+        });
+      });
+
+      el.characterName.addEventListener("input", saveCharacterTextFields);
+      el.characterClass.addEventListener("change", saveCharacterTextFields);
+      el.characterRoute.addEventListener("change", saveCharacterTextFields);
+      document.querySelectorAll(".route-stat-card [data-stat]").forEach(input => input.addEventListener("input", saveCharacterTextFields));
+      el.characterItemSearch.addEventListener("input", renderCharacterItems);
+
+      el.characterBuildSlots.addEventListener("click", event => {
+        const remove = event.target.closest("[data-remove-build]");
+        if(remove){
+          event.stopPropagation();
+          removeCharacterBuildItem(Number(remove.dataset.removeBuild));
+          return;
+        }
+        const slot = event.target.closest("[data-build-slot]");
+        if(slot){
+          selectedBuildSlot = Number(slot.dataset.buildSlot);
+          renderCharacterBuild();
+        }
+      });
+
+      el.characterItemsList.addEventListener("click", event => {
+        const item = event.target.closest("[data-character-item]");
+        if(item) placeCharacterItem(item.dataset.characterItem);
+      });
+
+      el.characterScreenInput.addEventListener("change", event => {
+        const file = event.target.files?.[0];
+        if(!file) return;
+        if(!file.type.startsWith("image/")){
+          alert("Choisis un fichier image.");
+          event.target.value = "";
+          return;
+        }
+        setCharacterScreen(file);
+      });
+
+
+      document.addEventListener("click", event => {
+        const btn = event.target.closest("[data-action]");
+        if(!btn) return;
+        const action = btn.dataset.action;
+        const name = btn.dataset.name;
+        if(action === "add") addOne(name);
+        if(action === "minus") minusOne(name);
+        if(action === "remove") removeItem(name);
+        if(action === "edit-effect") editEffect(name);
+      });
+
+      el.inventorySearch.addEventListener("input", renderInventory);
+      el.catalogSearch.addEventListener("input", renderCatalog);
+
+      function openClearInventoryModal(){
+        el.clearInventoryModalText.textContent = `Vider entièrement l’inventaire de ${currentHero} ? Cette action retire tous les exemplaires de ce héros, sans supprimer les items de la liste du jeu.`;
+        el.clearInventoryModal.classList.add("open");
+        el.clearInventoryModal.setAttribute("aria-hidden","false");
+      }
+
+      function closeClearInventoryModal(){
+        el.clearInventoryModal.classList.remove("open");
+        el.clearInventoryModal.setAttribute("aria-hidden","true");
+      }
+
+      function clearCurrentHeroInventory(){
+        setInventory(currentHero, {});
+        el.inventorySearch.value = "";
+        renderInventory();
+        renderStats();
+        closeClearInventoryModal();
+      }
+
+      function restoreCaiInventory(){
+        if(currentHero !== "Cai") return;
+        const restored = {};
+        Object.entries(DEFAULT_CAI_INVENTORY || {}).forEach(([name, qty]) => {
+          const clean = migrateItemName(name).name;
+          const n = Number(qty);
+          if(clean && Number.isFinite(n) && n > 0) restored[clean] = (restored[clean] || 0) + Math.floor(n);
+        });
+        setInventory("Cai", restored);
+        el.inventorySearch.value = "";
+        renderInventory();
+        renderStats();
+      }
+
+      el.addCatalogItemForm.addEventListener("submit", event => {
+        event.preventDefault();
+        const name = cleanName(el.newCatalogItem.value);
+        if(!name) return;
+        const catalog = getCatalog();
+        const exists = catalog.some(item => item.name.localeCompare(name,"fr",{sensitivity:"base"}) === 0);
+        if(!exists){
+          catalog.push({name,category:"À classer",nameLanguage:"À préciser",nameStatus:"Ajout manuel — nom / langue à confirmer",durability:"",rank:"",power:"",accuracy:"",weight:"",range:"",observedCountCai:"",capture:"",price:"",effect:"Effet à renseigner.",status:"À confirmer",source:"Ajout manuel",check:"À vérifier"});
+          saveCatalog(catalog);
+          el.newCatalogItem.value = "";
+          renderCatalog(); renderStats();
+        }
+      });
+
+      el.clearHeroInventory.addEventListener("click", openClearInventoryModal);
+      el.restoreCaiInventory.addEventListener("click", restoreCaiInventory);
+      el.clearInventoryModalConfirm.addEventListener("click", clearCurrentHeroInventory);
+      el.clearInventoryModalCancel.addEventListener("click", closeClearInventoryModal);
+      el.clearInventoryModalClose.addEventListener("click", closeClearInventoryModal);
+      el.clearInventoryModal.addEventListener("click", event => {
+        if(event.target === el.clearInventoryModal) closeClearInventoryModal();
+      });
+
+      el.effectModalSave.addEventListener("click", saveEffectFromModal);
+      el.effectModalCancel.addEventListener("click", closeEffectModal);
+      el.effectModalClose.addEventListener("click", closeEffectModal);
+      el.effectModal.addEventListener("click", event => { if(event.target === el.effectModal) closeEffectModal(); });
+
+      document.addEventListener("keydown", event => {
+        if(event.key === "Escape" && el.effectModal.classList.contains("open")) closeEffectModal();
+        if(event.key === "Escape" && el.clearInventoryModal.classList.contains("open")) closeClearInventoryModal();
+        if((event.ctrlKey || event.metaKey) && event.key === "Enter" && el.effectModal.classList.contains("open")) saveEffectFromModal();
+      });
+
+      const initialHash = parseAppHash();
+      const hashRoute = `#${initialHash.route.toLowerCase()}`;
+      const inventoryMatch = heroes.find(hero => hashRoute === `#inventaire-${hero.toLowerCase()}`);
+      const paralogueMatch = heroes.find(hero => hashRoute === `#annexe-${hero.toLowerCase()}`);
+      if(inventoryMatch) showHeroInventory(inventoryMatch);
+      if(paralogueMatch) showHeroParalogues(paralogueMatch);
+      const characterMatch = PLAYABLE_CHARACTERS.find(name => hashRoute === `#personnage-${characterSlug(name)}`);
+      if(characterMatch) showCharacterView(characterMatch);
+      if(hashRoute === "#personnage") showCharacterView("Cai");
+    })();
+  </script>
+</body>
+</html>
