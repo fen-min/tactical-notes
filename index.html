@@ -4063,141 +4063,107 @@
         saveJSON(characterProfileKey(currentCharacter), profile);
       }
 
-      // Screens des personnages : sauvegarde persistante via IndexedDB.
-      // Cette méthode fonctionne de façon fiable lorsque la page est servie depuis GitHub Pages.
-      const CHARACTER_SCREEN_DB = "fortunesWeaveCharacterScreens";
-      const CHARACTER_SCREEN_STORE = "screens";
-      const CHARACTER_SCREEN_DB_VERSION = 1;
-      let currentCharacterScreenObjectUrl = null;
+      // Screens des personnages : sauvegarde persistante dans localStorage.
+      // L'inventaire utilise déjà localStorage avec succès sur GitHub Pages,
+      // donc les screens utilisent désormais le même mécanisme.
+      const CHARACTER_SCREEN_PREFIX = "fw_character_screen_v2_";
 
-      function openCharacterScreenDB(){
+      function characterScreenKey(character){
+        return `${CHARACTER_SCREEN_PREFIX}${character}`;
+      }
+
+      function readFileAsDataURL(file){
         return new Promise((resolve,reject) => {
-          if(!("indexedDB" in window)){
-            reject(new Error("IndexedDB n'est pas disponible dans ce navigateur."));
-            return;
-          }
-
-          const request = indexedDB.open(CHARACTER_SCREEN_DB, CHARACTER_SCREEN_DB_VERSION);
-
-          request.onupgradeneeded = () => {
-            const db = request.result;
-            if(!db.objectStoreNames.contains(CHARACTER_SCREEN_STORE)){
-              db.createObjectStore(CHARACTER_SCREEN_STORE, {keyPath:"character"});
-            }
-          };
-
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error || new Error("Impossible d'ouvrir IndexedDB."));
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(reader.error || new Error("Impossible de lire l'image."));
+          reader.readAsDataURL(file);
         });
       }
 
-      async function saveCharacterScreenToDB(character,file){
-        const db = await openCharacterScreenDB();
-        try{
-          await new Promise((resolve,reject) => {
-            const tx = db.transaction(CHARACTER_SCREEN_STORE,"readwrite");
-            tx.objectStore(CHARACTER_SCREEN_STORE).put({
-              character,
-              image:file,
-              fileName:file.name || "",
-              mimeType:file.type || "",
-              updatedAt:Date.now()
-            });
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error || new Error("Erreur lors de l'enregistrement de l'image."));
-            tx.onabort = () => reject(tx.error || new Error("Enregistrement de l'image annulé."));
-          });
-        }finally{
-          db.close();
-        }
+      function loadImageElement(dataUrl){
+        return new Promise((resolve,reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("Impossible de décoder l'image."));
+          img.src = dataUrl;
+        });
       }
 
-      async function loadCharacterScreenFromDB(character){
-        const db = await openCharacterScreenDB();
-        try{
-          return await new Promise((resolve,reject) => {
-            const tx = db.transaction(CHARACTER_SCREEN_STORE,"readonly");
-            const request = tx.objectStore(CHARACTER_SCREEN_STORE).get(character);
-            request.onsuccess = () => {
-              const record = request.result;
-              resolve(record?.image instanceof Blob ? record.image : null);
-            };
-            request.onerror = () => reject(request.error || new Error("Impossible de lire l'image."));
-          });
-        }finally{
-          db.close();
-        }
+      async function compressCharacterScreen(file){
+        const dataUrl = await readFileAsDataURL(file);
+        const img = await loadImageElement(dataUrl);
+
+        // Limite raisonnable pour garder plusieurs portraits sans remplir
+        // trop vite l'espace local du navigateur.
+        const maxWidth = 720;
+        const maxHeight = 960;
+        const scale = Math.min(1, maxWidth / img.naturalWidth, maxHeight / img.naturalHeight);
+        const width = Math.max(1, Math.round(img.naturalWidth * scale));
+        const height = Math.max(1, Math.round(img.naturalHeight * scale));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if(!ctx) throw new Error("Canvas indisponible.");
+        ctx.drawImage(img,0,0,width,height);
+
+        // JPEG est beaucoup plus léger pour les captures de personnages.
+        return canvas.toDataURL("image/jpeg",0.82);
       }
 
-      async function deleteCharacterScreenFromDB(character){
-        const db = await openCharacterScreenDB();
-        try{
-          await new Promise((resolve,reject) => {
-            const tx = db.transaction(CHARACTER_SCREEN_STORE,"readwrite");
-            tx.objectStore(CHARACTER_SCREEN_STORE).delete(character);
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error || new Error("Impossible de supprimer l'image."));
-            tx.onabort = () => reject(tx.error || new Error("Suppression de l'image annulée."));
-          });
-        }finally{
-          db.close();
-        }
-      }
-
-      function displayCharacterScreen(imageBlob){
-        if(currentCharacterScreenObjectUrl){
-          URL.revokeObjectURL(currentCharacterScreenObjectUrl);
-          currentCharacterScreenObjectUrl = null;
-        }
-
-        if(!imageBlob){
+      function displayCharacterScreen(dataUrl){
+        if(!dataUrl){
           el.characterScreenImage.removeAttribute("src");
           el.characterScreenImage.style.display = "none";
           el.characterScreenPlaceholder.style.display = "";
           return;
         }
 
-        currentCharacterScreenObjectUrl = URL.createObjectURL(imageBlob);
-        el.characterScreenImage.src = currentCharacterScreenObjectUrl;
+        el.characterScreenImage.src = dataUrl;
         el.characterScreenImage.style.display = "block";
         el.characterScreenPlaceholder.style.display = "none";
       }
 
       async function setCharacterScreen(file){
         const characterAtStart = currentCharacter;
+
         try{
-          await saveCharacterScreenToDB(characterAtStart,file);
+          const dataUrl = await compressCharacterScreen(file);
+          localStorage.setItem(characterScreenKey(characterAtStart),dataUrl);
+
+          // Vérification immédiate : on relit exactement ce qui vient d'être stocké.
+          const saved = localStorage.getItem(characterScreenKey(characterAtStart));
+          if(!saved) throw new Error("L'image n'a pas été retrouvée après l'enregistrement.");
+
           if(currentCharacter === characterAtStart){
-            displayCharacterScreen(file);
+            displayCharacterScreen(saved);
           }
         }catch(error){
           console.error("Sauvegarde du screen impossible :",error);
-          alert("Impossible d'enregistrer cette image dans le navigateur.");
+          alert("Impossible d'enregistrer ce screen. L'espace de stockage du navigateur est peut-être plein.");
         }
       }
 
-      async function clearCharacterScreen(){
-        const characterAtStart = currentCharacter;
+      function clearCharacterScreen(){
         try{
-          await deleteCharacterScreenFromDB(characterAtStart);
-          if(currentCharacter === characterAtStart){
-            el.characterScreenInput.value = "";
-            displayCharacterScreen(null);
-          }
+          localStorage.removeItem(characterScreenKey(currentCharacter));
         }catch(error){
-          console.error("Suppression du screen impossible :",error);
+          console.error(error);
         }
+        el.characterScreenInput.value = "";
+        displayCharacterScreen("");
       }
 
-      async function restoreCharacterScreen(character){
-        displayCharacterScreen(null);
+      function restoreCharacterScreen(character){
         try{
-          const imageBlob = await loadCharacterScreenFromDB(character);
+          const dataUrl = localStorage.getItem(characterScreenKey(character));
           if(currentCharacter !== character) return;
-          displayCharacterScreen(imageBlob);
+          displayCharacterScreen(dataUrl || "");
         }catch(error){
           console.error("Chargement du screen impossible :",error);
-          if(currentCharacter === character) displayCharacterScreen(null);
+          if(currentCharacter === character) displayCharacterScreen("");
         }
       }
 
